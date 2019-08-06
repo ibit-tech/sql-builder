@@ -8,21 +8,21 @@ package tech.ibit.sqlbuilder;
  */
 public interface UserProperties {
 
-    Table TABLE_NAME = new Table("user", "u");
+    Table TABLE = new Table("user", "u");
 
-    Column userId = new Column(TABLE_NAME, "user_id");
-    Column loginId = new Column(TABLE_NAME, "login_id");
-    Column email = new Column(TABLE_NAME, "email");
-    Column password = new Column(TABLE_NAME, "password");
-    Column mobilePhone = new Column(TABLE_NAME, "mobile_phone");
-    Column type = new Column(TABLE_NAME, "type");
-    Column name = new Column(TABLE_NAME, "name");
-    Column avatarId = new Column(TABLE_NAME, "avatar_id");
-    Column currentProjectId = new Column(TABLE_NAME, "current_project_id");
-    Column loginTimes = new Column(TABLE_NAME, "login_times");
+    Column userId = new Column(TABLE, "user_id");
+    Column loginId = new Column(TABLE, "login_id");
+    Column email = new Column(TABLE, "email");
+    Column password = new Column(TABLE, "password");
+    Column mobilePhone = new Column(TABLE, "mobile_phone");
+    Column type = new Column(TABLE, "type");
+    Column name = new Column(TABLE, "name");
+    Column avatarId = new Column(TABLE, "avatar_id");
+    Column currentProjectId = new Column(TABLE, "current_project_id");
+    Column loginTimes = new Column(TABLE, "login_times");
 
-    Column gender = new Column(TABLE_NAME, "gender");
-    Column age = new Column(TABLE_NAME, "age");
-    Column orgId = new Column(TABLE_NAME, "org_id");
+    Column gender = new Column(TABLE, "gender");
+    Column age = new Column(TABLE, "age");
+    Column orgId = new Column(TABLE, "org_id");
 
 }

@@ -147,7 +147,7 @@ public class EntityConverterTest {
         user.setMobilePhone("188");
         user.setPassword("12345678");
 
-        UserPO po = EntityConverter.copyColumns(user, UserPO.class);
+        UserPo po = EntityConverter.copyColumns(user, UserPo.class);
         assertEquals(user.getEmail(), po.getEmail());
         assertEquals(user.getLoginId(), po.getLoginId());
         assertEquals(user.getUserId(), po.getUserId());
@@ -161,7 +161,7 @@ public class EntityConverterTest {
         user1.setMobilePhone("199");
         user1.setPassword("12345678");
 
-        List<UserPO> poList = EntityConverter.copyColumns(Arrays.asList(user, user1), UserPO.class);
+        List<UserPo> poList = EntityConverter.copyColumns(Arrays.asList(user, user1), UserPo.class);
         assertEquals(user.getEmail(), poList.get(0).getEmail());
         assertEquals(user.getLoginId(), poList.get(0).getLoginId());
         assertEquals(user.getUserId(), poList.get(0).getUserId());

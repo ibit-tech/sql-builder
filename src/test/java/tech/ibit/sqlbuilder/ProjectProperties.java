@@ -8,9 +8,9 @@ package tech.ibit.sqlbuilder;
  */
 public interface ProjectProperties {
 
-    Table TABLE_NAME = new Table("sz_project", "p");
+    Table TABLE = new Table("sz_project", "p");
 
-    Column projectId = new Column(TABLE_NAME, "project_id");
-    Column name = new Column(TABLE_NAME, "name");
+    Column projectId = new Column(TABLE, "project_id");
+    Column name = new Column(TABLE, "name");
 
 }

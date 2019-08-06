@@ -9,7 +9,7 @@ import tech.ibit.sqlbuilder.annotation.DbTable;
  * @version 1.0
  */
 @DbTable(name = "user", alias = "u")
-public class UserPO {
+public class UserPo {
 
     @DbId(name = "user_id", autoIncrease = true)
     private Integer userId;

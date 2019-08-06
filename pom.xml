@@ -6,12 +6,12 @@
 
     <groupId>tech.ibit</groupId>
     <artifactId>sql-builder</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <packaging>jar</packaging>
 
     <properties>
         <java.version>1.8</java.version>
-        <gpg.skip>true</gpg.skip>
+        <gpg.skip>false</gpg.skip>
         <javadoc.skip>false</javadoc.skip>
         <common-lang.version>2.6</common-lang.version>
         <junit.version>4.12</junit.version>
@@ -35,6 +35,12 @@
             <name>IBIT TECH</name>
             <email>ibit_tech@aliyun.com</email>
         </developer>
+
+        <developer>
+            <id>xiaobenma020</id>
+            <name>xiaobenma020</name>
+            <email>xiaobenma020@gmail.com</email>
+        </developer>
     </developers>
 
 
@@ -43,7 +49,6 @@
             <name>Apache 2</name>
             <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
             <distribution>repo</distribution>
-            <comments>A business-friendly OSS license</comments>
         </license>
     </licenses>
 

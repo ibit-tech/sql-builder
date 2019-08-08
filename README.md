@@ -2,7 +2,7 @@
 
 ## 关于sql-builder
 
-`sql-builder`尝试使用java对象，通过`类SQL`的拼接方式，动态快速的生成SQL。它可作为稍后的开源项目`ibit-tech-mybatis`的核心类库。
+`sql-builder`尝试使用java对象，通过`类SQL`的拼接方式，动态快速的生成SQL。它可作为稍后的开源项目`ibit-mybatis`的核心类库。
 sql-builder提供了对象拼接的构造类`Sql`和字符串拼接的构造类`StringSql`。
 
 ## Sql构造示例

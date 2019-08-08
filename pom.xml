@@ -19,6 +19,10 @@
         <lombok-maven-plugin.version>1.16.18.1</lombok-maven-plugin.version>
     </properties>
 
+    <name>sql-builder</name>
+    <url>https://github.com/ibit-tech/sql-builder</url>
+    <description>Sql builder</description>
+
     <scm>
         <url>https://github.com/ibit-tech/sql-builder</url>
         <connection>scm:git:https://github.com/ibit-tech/sql-builder.git</connection>

@@ -108,6 +108,11 @@ class AbstractSqlStatement {
     List<String> joinOn = new ArrayList<>();
 
     /**
+     * join语句参数
+     */
+    List<Object> joinOnParams = new ArrayList<>();
+
+    /**
      * 查询语句列表
      */
     List<String> from = new ArrayList<>();
@@ -288,7 +293,7 @@ class AbstractSqlStatement {
             limitParams.add(limit);
         }
 
-        return getSQLParams(sql, Arrays.asList(whereParams, groupBy.isEmpty() ? Collections.emptyList() : havingParams, orderByParams, limitParams));
+        return getSQLParams(sql, Arrays.asList(joinOnParams, whereParams, groupBy.isEmpty() ? Collections.emptyList() : havingParams, orderByParams, limitParams));
     }
 
 
@@ -311,7 +316,7 @@ class AbstractSqlStatement {
         if (!groupBy.isEmpty()) {
             appendSQL(sql, " HAVING ", having, " ", true);
         }
-        return getSQLParams(sql, Arrays.asList(whereParams, groupBy.isEmpty() ? Collections.emptyList() : havingParams));
+        return getSQLParams(sql, Arrays.asList(joinOnParams, whereParams, groupBy.isEmpty() ? Collections.emptyList() : havingParams));
     }
 
     /**
@@ -345,7 +350,7 @@ class AbstractSqlStatement {
         appendSQL(sql, " FROM ", from, ", ", false);
         appendSQL(sql, " ", joinOn, " ", true);
         appendSQL(sql, " WHERE ", where, " ", true);
-        return getSQLParams(sql, Collections.singletonList(whereParams));
+        return getSQLParams(sql, Arrays.asList(joinOnParams, whereParams));
     }
 
     /**
@@ -369,7 +374,7 @@ class AbstractSqlStatement {
         appendSQL(sql, " SET ", sets, ", ", true);
         appendSQL(sql, " WHERE ", where, " ", true);
         appendLastClause(sql);
-        return getSQLParams(sql, Arrays.asList(values, whereParams));
+        return getSQLParams(sql, Arrays.asList(joinOnParams, values, whereParams));
     }
 
     @SuppressWarnings("unchecked")

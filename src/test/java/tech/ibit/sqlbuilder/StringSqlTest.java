@@ -105,4 +105,23 @@ public class StringSqlTest extends CommonTest {
                 Arrays.asList(Arrays.asList("ibit_tech@aliyun.com", "188", "loginId@ibit.tech"), Arrays.asList("ibit_tech@aliyun.com1", "1881", "login_id1@ibit.tech")),
                 sql.getSqlParams());
     }
+
+    @Test
+    public void joinOn() {
+        StringSql sql = new StringSql()
+                .select(Arrays.asList("u.name", "u.email", "p.name"))
+                .from("user u")
+                .joinOn("LEFT JOIN project p ON u.current_project_id = p.project_id");
+        assertParamsEquals("SELECT u.name, u.email, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id", Collections.emptyList(),
+                sql.getSqlParams());
+
+
+        sql = new StringSql()
+                .select(Arrays.asList("u.name", "u.email", "p.name"))
+                .from("user u")
+                .joinOn("LEFT JOIN project p ON u.current_project_id = p.project_id AND p.project_id = ?", Collections.singletonList(1));
+        assertParamsEquals("SELECT u.name, u.email, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id AND p.project_id = ?", Collections.singletonList(1),
+                sql.getSqlParams());
+    }
+
 }

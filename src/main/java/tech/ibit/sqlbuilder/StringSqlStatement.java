@@ -1,6 +1,7 @@
 package tech.ibit.sqlbuilder;
 
 import org.apache.commons.lang.StringUtils;
+import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
 import java.util.List;
 
@@ -32,6 +33,37 @@ class StringSqlStatement extends AbstractSqlStatement {
     void addJoinOns(List<String> joinOns) {
         for (String joinOn : joinOns) {
             addJoinOn(joinOn);
+        }
+    }
+
+
+    /**
+     * 增加`JOIN ON`语句
+     *
+     * @param joinOn       `JOIN ON`语句
+     * @param joinOnParams ON条件
+     */
+    void addJoinOn(String joinOn, List<Object> joinOnParams) {
+        if (StringUtils.isNotBlank(joinOn)) {
+            this.joinOn.add(joinOn);
+        }
+        if (CollectionUtils.isNotEmpty(joinOnParams)) {
+            this.joinOnParams.addAll(joinOnParams);
+        }
+    }
+
+    /**
+     * 增加`JOIN ON`语句
+     *
+     * @param joinOns      `JOIN ON`语句列表
+     * @param joinOnParams ON条件
+     */
+    void addJoinOns(List<String> joinOns, List<Object> joinOnParams) {
+        for (String joinOn : joinOns) {
+            addJoinOn(joinOn);
+        }
+        if (CollectionUtils.isNotEmpty(joinOnParams)) {
+            this.joinOnParams.addAll(joinOnParams);
         }
     }
 

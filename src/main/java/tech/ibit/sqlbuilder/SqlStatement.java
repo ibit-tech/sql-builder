@@ -1,8 +1,10 @@
 package tech.ibit.sqlbuilder;
 
 import org.apache.commons.lang.StringUtils;
+import tech.ibit.sqlbuilder.annotation.DbTable;
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,6 +50,36 @@ class SqlStatement extends AbstractSqlStatement {
         }
         joinOn.add(sb.toString());
     }
+
+
+    /**
+     * 增加`JOIN ON`语句
+     *
+     * @param type        `JOIN ON 类型`
+     * @param table       表
+     * @param criteriaItems ON条件
+     */
+    void addComplexJoinOn(SqlStatement.JoinOnType type, Table table, List<CriteriaItem> criteriaItems) {
+        StringBuilder sb = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+        sb.append(null == type ? "" : (type.name() + " "))
+                .append("JOIN ")
+                .append(getTableName(table))
+                .append(" ON ");
+        for (int i = 0; i < criteriaItems.size(); i ++) {
+            if (i != 0) {
+                sb.append(" AND ");
+            }
+            CriteriaItem item = criteriaItems.get(i);
+            PrepareStatement prepareStatement = item.getPrepareStatement(useAlias);
+
+            sb.append(prepareStatement.getPrepareSql());
+            params.addAll(prepareStatement.getValues());
+        }
+        joinOn.add(sb.toString());
+        joinOnParams.addAll(params);
+    }
+
 
     /**
      * 增加列

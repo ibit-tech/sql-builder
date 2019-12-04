@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author IBIT TECH
@@ -192,13 +193,13 @@ public class SqlTest extends CommonTest {
                 .from(UserProperties.TABLE)
                 .from(ProjectProperties.TABLE)
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId));
-        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u, sz_project p WHERE u.current_project_id = p.project_id",
+        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u, project p WHERE u.current_project_id = p.project_id",
                 Collections.emptyList(), sql.getSqlParams());
 
         sql = new Sql()
                 .select(Arrays.asList(ProjectProperties.projectId, ProjectProperties.name))
                 .from(ProjectProperties.TABLE);
-        assertParamsEquals("SELECT p.project_id, p.name FROM sz_project p",
+        assertParamsEquals("SELECT p.project_id, p.name FROM project p",
                 Collections.emptyList(), sql.getSqlParams());
     }
 
@@ -208,7 +209,7 @@ public class SqlTest extends CommonTest {
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
                 .from(UserProperties.TABLE)
                 .joinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId));
-        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u JOIN sz_project p ON u.current_project_id = p.project_id", sql.getSqlParams());
+        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u JOIN project p ON u.current_project_id = p.project_id", sql.getSqlParams());
     }
 
     @Test
@@ -217,7 +218,7 @@ public class SqlTest extends CommonTest {
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
                 .from(UserProperties.TABLE)
                 .leftJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId));
-        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN sz_project p ON u.current_project_id = p.project_id", sql.getSqlParams());
+        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id", sql.getSqlParams());
     }
 
     @Test
@@ -226,7 +227,7 @@ public class SqlTest extends CommonTest {
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
                 .from(UserProperties.TABLE)
                 .rightJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId));
-        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u RIGHT JOIN sz_project p ON u.current_project_id = p.project_id", sql.getSqlParams());
+        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u RIGHT JOIN project p ON u.current_project_id = p.project_id", sql.getSqlParams());
     }
 
     @Test
@@ -235,7 +236,107 @@ public class SqlTest extends CommonTest {
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
                 .from(UserProperties.TABLE)
                 .fullJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId));
-        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u FULL JOIN sz_project p ON u.current_project_id = p.project_id", sql.getSqlParams());
+        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u FULL JOIN project p ON u.current_project_id = p.project_id", sql.getSqlParams());
+    }
+
+
+    @Test
+    public void complexLeftJoinOn() {
+        Sql sql = new Sql()
+                .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+                .from(UserProperties.TABLE)
+                .complexLeftJoinOn(ProjectProperties.TABLE, Collections.singletonList(CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId)));
+        SqlParams sqlParams = sql.getSqlParams();
+        assertEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id", sqlParams.getSql());
+        assertTrue(sqlParams.getParams().isEmpty());
+
+
+        sql = new Sql()
+                .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+                .from(UserProperties.TABLE)
+                .complexLeftJoinOn(ProjectProperties.TABLE, Arrays.asList(
+                        CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId),
+                        CriteriaItemMaker.like(ProjectProperties.name, "小%")));
+        sqlParams = sql.getSqlParams();
+        assertEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p "
+                + "ON u.current_project_id = p.project_id AND p.name LIKE ?", sqlParams.getSql());
+        assertList(sqlParams.getParams(), 1, Collections.singletonList("小%"));
+    }
+
+    @Test
+    public void complexRightJoinOn() {
+        Sql sql = new Sql()
+                .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+                .from(UserProperties.TABLE)
+                .complexRightJoinOn(ProjectProperties.TABLE, Collections.singletonList(CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId)));
+        SqlParams sqlParams = sql.getSqlParams();
+        assertEquals("SELECT u.user_id, u.name, p.name FROM user u RIGHT JOIN project p ON u.current_project_id = p.project_id", sqlParams.getSql());
+        assertTrue(sqlParams.getParams().isEmpty());
+
+
+        sql = new Sql()
+                .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+                .from(UserProperties.TABLE)
+                .complexRightJoinOn(ProjectProperties.TABLE, Arrays.asList(
+                        CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId),
+                        CriteriaItemMaker.like(ProjectProperties.name, "小%")));
+        sqlParams = sql.getSqlParams();
+        assertEquals("SELECT u.user_id, u.name, p.name FROM user u RIGHT JOIN project p ON u.current_project_id = p.project_id AND p.name LIKE ?", sqlParams.getSql());
+        assertList(sqlParams.getParams(), 1, Collections.singletonList("小%"));
+    }
+
+    @Test
+    public void complexFullJoinOn() {
+        Sql sql = new Sql()
+                .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+                .from(UserProperties.TABLE)
+                .complexFullJoinOn(ProjectProperties.TABLE, Collections.singletonList(CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId)));
+        SqlParams sqlParams = sql.getSqlParams();
+        assertEquals("SELECT u.user_id, u.name, p.name FROM user u FULL JOIN project p ON u.current_project_id = p.project_id", sqlParams.getSql());
+        assertTrue(sqlParams.getParams().isEmpty());
+
+
+        sql = new Sql()
+                .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+                .from(UserProperties.TABLE)
+                .complexFullJoinOn(ProjectProperties.TABLE, Arrays.asList(
+                        CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId),
+                        CriteriaItemMaker.like(ProjectProperties.name, "小%")));
+        sqlParams = sql.getSqlParams();
+        assertEquals("SELECT u.user_id, u.name, p.name FROM user u FULL JOIN project p ON u.current_project_id = p.project_id AND p.name LIKE ?", sqlParams.getSql());
+        assertList(sqlParams.getParams(), 1, Collections.singletonList("小%"));
+    }
+
+
+    @Test
+    public void complexInnerJoinOn() {
+        Table region = new Table("region", "r");
+        Column regionName = new Column(region, "name");
+        Column regionParentCode = new Column(region, "parent_code");
+
+        Table parentRegion = new Table("region", "pr");
+        Column parentRegionCode = new Column(parentRegion, "code");
+        Column parentRegionName = new Column(parentRegion, "name");
+
+        Sql sql = new Sql()
+                .select(Arrays.asList(parentRegionName, regionName))
+                .from(region)
+                .complexInnerJoinOn(parentRegion, Collections.singletonList(CriteriaItemMaker.equalsTo(regionParentCode, parentRegionCode)));
+        SqlParams sqlParams = sql.getSqlParams();
+        assertEquals("SELECT pr.name, r.name FROM region r INNER JOIN region pr ON r.parent_code = pr.code", sqlParams.getSql());
+        assertTrue(sqlParams.getParams().isEmpty());
+
+
+        sql = new Sql()
+                .select(Arrays.asList(parentRegionName, regionName))
+                .from(region)
+                .complexInnerJoinOn(parentRegion, Arrays.asList(
+                        CriteriaItemMaker.equalsTo(regionParentCode, parentRegionCode),
+                        CriteriaItemMaker.equalsTo(regionParentCode, "110")));
+        sqlParams = sql.getSqlParams();
+        assertEquals("SELECT pr.name, r.name FROM region r INNER JOIN region pr ON r.parent_code = pr.code AND r.parent_code = ?", sqlParams.getSql());
+        assertList(sqlParams.getParams(), 1, Collections.singletonList("110"));
+
     }
 
 
@@ -377,7 +478,7 @@ public class SqlTest extends CommonTest {
                 .leftJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId))
                 .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new OrderBy(UserProperties.userId, true)))
                 .limit(1000);
-        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN sz_project p ON u.current_project_id = p.project_id ORDER BY p.project_id, u.user_id DESC LIMIT ?, ?",
+        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id, u.user_id DESC LIMIT ?, ?",
                 Arrays.asList(0, 1000), sql.getSqlParams());
     }
 
@@ -389,7 +490,7 @@ public class SqlTest extends CommonTest {
                 .from(UserProperties.TABLE)
                 .leftJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId))
                 .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new CustomOrderBy(UserProperties.userId, Arrays.asList(1, 2, 3), true)));
-        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN sz_project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
+        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
                 + ", FIELD(u.user_id, ?, ?, ?) DESC", Arrays.asList(1, 2, 3), sql.getSqlParams());
     }
 
@@ -421,7 +522,7 @@ public class SqlTest extends CommonTest {
                 .leftJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId))
                 .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new OrderBy(UserProperties.userId, true)))
                 .limit(10);
-        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN sz_project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
+        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
                 + ", u.user_id DESC LIMIT ?, ?", Arrays.asList(0, 10), sql.getSqlParams());
 
         sql = new Sql()
@@ -430,7 +531,7 @@ public class SqlTest extends CommonTest {
                 .leftJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId))
                 .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new OrderBy(UserProperties.userId, true)))
                 .limit(10, 20);
-        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN sz_project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
+        assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
                 + ", u.user_id DESC LIMIT ?, ?", Arrays.asList(10, 20), sql.getSqlParams());
     }
 

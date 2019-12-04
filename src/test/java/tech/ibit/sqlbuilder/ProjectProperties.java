@@ -8,7 +8,7 @@ package tech.ibit.sqlbuilder;
  */
 public interface ProjectProperties {
 
-    Table TABLE = new Table("sz_project", "p");
+    Table TABLE = new Table("project", "p");
 
     Column projectId = new Column(TABLE, "project_id");
     Column name = new Column(TABLE, "name");

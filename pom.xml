@@ -6,7 +6,7 @@
 
     <groupId>tech.ibit</groupId>
     <artifactId>sql-builder</artifactId>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -15,8 +15,7 @@
         <javadoc.skip>false</javadoc.skip>
         <common-lang.version>2.6</common-lang.version>
         <junit.version>4.12</junit.version>
-        <slf4j.version>1.7.21</slf4j.version>
-        <lombok-maven-plugin.version>1.16.18.1</lombok-maven-plugin.version>
+        <lombok.version>1.16.20</lombok.version>
     </properties>
 
     <name>sql-builder</name>
@@ -63,25 +62,11 @@
             <version>${common-lang.version}</version>
         </dependency>
 
-        <!--slf4j-->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jul-to-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-        <!--slf4j end-->
-
-        <!--lombok-->
+        <!-- lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
-            <artifactId>lombok-maven-plugin</artifactId>
-            <version>${lombok-maven-plugin.version}</version>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
         </dependency>
 
         <dependency>
@@ -98,6 +83,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -107,6 +93,7 @@
 
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>

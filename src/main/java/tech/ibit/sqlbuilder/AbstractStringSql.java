@@ -280,6 +280,31 @@ abstract class AbstractStringSql<T> {
 
 
     /**
+     * 增加`JOIN ON`语句
+     *
+     * @param joinOn       `JOIN ON`语句
+     * @param joinOnParams ON条件
+     * @return Sql对象
+     */
+    public T joinOn(String joinOn, List<Object> joinOnParams) {
+        getSqlStatement().addJoinOn(joinOn, joinOnParams);
+        return getSql();
+    }
+
+    /**
+     * 增加`JOIN ON`语句
+     *
+     * @param joinOns      `JOIN ON`语句列表
+     * @param joinOnParams ON条件
+     * @return Sql对象
+     */
+    public T oinOns(List<String> joinOns, List<Object> joinOnParams) {
+        getSqlStatement().addJoinOns(joinOns, joinOnParams);
+        return getSql();
+    }
+
+
+    /**
      * `WHERE` 条件
      *
      * @param criteria 条件，如："t1.user_id=t0.user_id"

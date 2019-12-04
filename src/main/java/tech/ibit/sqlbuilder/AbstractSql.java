@@ -415,6 +415,56 @@ abstract class AbstractSql<T> {
         return getSql();
     }
 
+
+
+    /**
+     * `LEFT JOIN table t1 on t1.column1=t0.column2, t1.column3=t0.column4 AND t1.column5=?`语句
+     *
+     * @param table         需要join的表对象
+     * @param criteriaItems 条件
+     * @return SQL对象
+     */
+    public T complexLeftJoinOn(Table table, List<CriteriaItem> criteriaItems) {
+        sqlStatement().addComplexJoinOn(SqlStatement.JoinOnType.LEFT, table, criteriaItems);
+        return getSql();
+    }
+
+    /**
+     * `RIGHT JOIN table t1 on t1.column1=t0.column2, t1.column3=t0.column4 AND t1.column5=?`语句
+     *
+     * @param table         需要join的表对象
+     * @param criteriaItems 条件
+     * @return SQL对象
+     */
+    public T complexRightJoinOn(Table table, List<CriteriaItem> criteriaItems) {
+        sqlStatement().addComplexJoinOn(SqlStatement.JoinOnType.RIGHT, table, criteriaItems);
+        return getSql();
+    }
+
+    /**
+     * `FULL JOIN table t1 on t1.column1=t0.column2, t1.column3=t0.column4 AND t1.column5=?`语句
+     *
+     * @param table         需要join的表对象
+     * @param criteriaItems 条件
+     * @return SQL对象
+     */
+    public T complexFullJoinOn(Table table, List<CriteriaItem> criteriaItems) {
+        sqlStatement().addComplexJoinOn(SqlStatement.JoinOnType.FULL, table, criteriaItems);
+        return getSql();
+    }
+
+    /**
+     * `INNER JOIN table t1 on t1.column1=t0.column2, t1.column3=t0.column4 AND t1.column5=?`语句
+     *
+     * @param table         需要join的表对象
+     * @param criteriaItems 条件
+     * @return SQL对象
+     */
+    public T complexInnerJoinOn(Table table, List<CriteriaItem> criteriaItems) {
+        sqlStatement().addComplexJoinOn(SqlStatement.JoinOnType.INNER, table, criteriaItems);
+        return getSql();
+    }
+
     /**
      * `WHERE` 语句
      *

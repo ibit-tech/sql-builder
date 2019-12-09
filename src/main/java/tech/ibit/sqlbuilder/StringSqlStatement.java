@@ -43,7 +43,7 @@ class StringSqlStatement extends AbstractSqlStatement {
      * @param joinOn       `JOIN ON`语句
      * @param joinOnParams ON条件
      */
-    void addJoinOn(String joinOn, List<Object> joinOnParams) {
+    void addJoinOn(String joinOn, List<KeyValuePair> joinOnParams) {
         if (StringUtils.isNotBlank(joinOn)) {
             this.joinOn.add(joinOn);
         }
@@ -58,7 +58,7 @@ class StringSqlStatement extends AbstractSqlStatement {
      * @param joinOns      `JOIN ON`语句列表
      * @param joinOnParams ON条件
      */
-    void addJoinOns(List<String> joinOns, List<Object> joinOnParams) {
+    void addJoinOns(List<String> joinOns, List<KeyValuePair> joinOnParams) {
         for (String joinOn : joinOns) {
             addJoinOn(joinOn);
         }
@@ -139,12 +139,12 @@ class StringSqlStatement extends AbstractSqlStatement {
      * @param sets   列设置率
      * @param values 值列表
      */
-    void addSets(List<String> sets, List<Object> values) {
+    void addSets(List<String> sets, List<KeyValuePair> values) {
         if (null != sets) {
             addSets(sets);
         }
         if (null != values) {
-            addValues(values);
+            this.setValues.addAll(values);
         }
     }
 
@@ -210,7 +210,7 @@ class StringSqlStatement extends AbstractSqlStatement {
      * @param criterion   条件列表
      * @param whereParams WHERE参数
      */
-    void addWheres(List<String> criterion, List<Object> whereParams) {
+    void addWheres(List<String> criterion, List<KeyValuePair> whereParams) {
         if (null != criterion) {
             addWheres(criterion);
         }
@@ -290,7 +290,7 @@ class StringSqlStatement extends AbstractSqlStatement {
      * @param criterion    HAVING条件列表
      * @param havingParams HAVING参数列表
      */
-    void addHaving(List<String> criterion, List<Object> havingParams) {
+    void addHaving(List<String> criterion, List<KeyValuePair> havingParams) {
         if (null != criterion) {
             addHaving(criterion);
         }

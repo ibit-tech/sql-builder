@@ -151,19 +151,6 @@ abstract class AbstractStringSql<T> {
         return getSql();
     }
 
-
-    /**
-     * 多条批量`INSERT INTO table(column1, column2...) VALUES(value1, value2...)` 语句
-     *
-     * @param table 表
-     * @return Sql对象
-     */
-    public T batchInsertInto2(String table) {
-        getSqlStatement().setStatementType(SqlStatement.StatementType.BATCH_INSERT2);
-        getSqlStatement().addFrom(table);
-        return getSql();
-    }
-
     /**
      * `SET`语句
      * 如: `u.name=p.name`
@@ -195,7 +182,7 @@ abstract class AbstractStringSql<T> {
      * @param values 值列表
      * @return Sql对象
      */
-    public T set(List<String> sets, List<Object> values) {
+    public T set(List<String> sets, List<KeyValuePair> values) {
         getSqlStatement().addSets(sets, values);
         return getSql();
     }
@@ -286,7 +273,7 @@ abstract class AbstractStringSql<T> {
      * @param joinOnParams ON条件
      * @return Sql对象
      */
-    public T joinOn(String joinOn, List<Object> joinOnParams) {
+    public T joinOn(String joinOn, List<KeyValuePair> joinOnParams) {
         getSqlStatement().addJoinOn(joinOn, joinOnParams);
         return getSql();
     }
@@ -298,7 +285,7 @@ abstract class AbstractStringSql<T> {
      * @param joinOnParams ON条件
      * @return Sql对象
      */
-    public T oinOns(List<String> joinOns, List<Object> joinOnParams) {
+    public T oinOns(List<String> joinOns, List<KeyValuePair> joinOnParams) {
         getSqlStatement().addJoinOns(joinOns, joinOnParams);
         return getSql();
     }
@@ -333,7 +320,7 @@ abstract class AbstractStringSql<T> {
      * @param whereParams 条件参数值
      * @return Sql对象
      */
-    public T where(List<String> criterion, List<Object> whereParams) {
+    public T where(List<String> criterion, List<KeyValuePair> whereParams) {
         getSqlStatement().addWheres(criterion, whereParams);
         return getSql();
     }
@@ -411,7 +398,7 @@ abstract class AbstractStringSql<T> {
      * @param havingParams HAVING参数值列表
      * @return Sql对象
      */
-    private T having(List<String> criterion, List<Object> havingParams) {
+    private T having(List<String> criterion, List<KeyValuePair> havingParams) {
         getSqlStatement().addHaving(criterion, havingParams);
         return getSql();
     }
@@ -457,7 +444,7 @@ abstract class AbstractStringSql<T> {
      * @return Sql参数对象
      */
     public SqlParams countSqlParams() {
-        return getSqlStatement().countSQLParams();
+        return getSqlStatement().countSqlParams();
     }
 
     /**
@@ -466,7 +453,7 @@ abstract class AbstractStringSql<T> {
      * @return Sql参数对象
      */
     public SqlParams getSqlParams() {
-        return getSqlStatement().getSQLParams();
+        return getSqlStatement().getSqlParams();
     }
 
 

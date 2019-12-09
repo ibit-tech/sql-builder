@@ -203,20 +203,6 @@ abstract class AbstractSql<T> {
     }
 
     /**
-     * 多条批量`INSERT INTO table(column1, column2...) VALUES(value1, value2...)` 语句
-     *
-     * @param table 表对象
-     * @return SQL对象 对象
-     * @see Table
-     */
-    public T batchInsertInto2(Table table) {
-        sqlStatement().setStatementType(SqlStatement.StatementType.BATCH_INSERT2);
-        sqlStatement().setUseAlias(false);
-        sqlStatement().addFrom(table);
-        return getSql();
-    }
-
-    /**
      * `SET` 语句
      *
      * @param sets 列和值列表
@@ -678,7 +664,7 @@ abstract class AbstractSql<T> {
      * @return SQL参数对象
      */
     public SqlParams countSqlParams() {
-        return sqlStatement().countSQLParams();
+        return sqlStatement().countSqlParams();
     }
 
     /**
@@ -687,7 +673,7 @@ abstract class AbstractSql<T> {
      * @return SQL参数对象
      */
     public SqlParams getSqlParams() {
-        return sqlStatement().getSQLParams();
+        return sqlStatement().getSqlParams();
     }
 
     private SqlStatement sqlStatement() {

@@ -3,10 +3,8 @@ package tech.ibit.sqlbuilder;
 
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 条件内容对象
@@ -138,7 +136,7 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return 预查询SQL对象
      */
-    PrepareStatement getPrepareStatement(boolean useAlias) {
+    PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
         switch (valueType) {
             case COLUMN_COMPARE:
                 return getColumnsComparePrepareStatement(useAlias);
@@ -161,9 +159,9 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return 两列比较预查询SQL对象
      */
-    private PrepareStatement getColumnsComparePrepareStatement(boolean useAlias) {
+    private PrepareStatement<KeyValuePair> getColumnsComparePrepareStatement(boolean useAlias) {
         String sql = getColumnName(column, useAlias) + " " + operator.getValue() + " " + getColumnName(secondColumn, useAlias);
-        return new PrepareStatement(sql, Collections.emptyList());
+        return new PrepareStatement<>(sql, Collections.emptyList());
     }
 
     /**
@@ -172,9 +170,9 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return 无值预查询SQL对象
      */
-    private PrepareStatement getNoValuePrepareStatement(boolean useAlias) {
+    private PrepareStatement<KeyValuePair> getNoValuePrepareStatement(boolean useAlias) {
         String sql = getColumnName(column, useAlias) + " " + operator.getValue();
-        return new PrepareStatement(sql, Collections.emptyList());
+        return new PrepareStatement<>(sql, Collections.emptyList());
     }
 
     /**
@@ -183,9 +181,10 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return 单值预查询SQL对象
      */
-    private PrepareStatement getSingleValuePrepareStatement(boolean useAlias) {
-        String sql = getColumnName(column, useAlias) + " " + operator.getValue() + " ?";
-        return new PrepareStatement(sql, Collections.singletonList(value));
+    private PrepareStatement<KeyValuePair> getSingleValuePrepareStatement(boolean useAlias) {
+        String columnName = getColumnName(column, useAlias);
+        String sql = columnName + " " + operator.getValue() + " ?";
+        return new PrepareStatement<>(sql, Collections.singletonList(new KeyValuePair(columnName, value)));
     }
 
     /**
@@ -194,9 +193,10 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return BETWEEN值预查询SQL对象
      */
-    private PrepareStatement getBetweenPrepareStatement(boolean useAlias) {
-        String sql = getColumnName(column, useAlias) + " " + operator.getValue() + " ? " + operator.getSecondValue() + " ?";
-        return new PrepareStatement(sql, Arrays.asList(value, secondValue));
+    private PrepareStatement<KeyValuePair> getBetweenPrepareStatement(boolean useAlias) {
+        String columnName = getColumnName(column, useAlias);
+        String sql = columnName + " " + operator.getValue() + " ? " + operator.getSecondValue() + " ?";
+        return new PrepareStatement<>(sql, Arrays.asList(new KeyValuePair(columnName, value), new KeyValuePair(columnName, secondValue)));
     }
 
     /**
@@ -205,10 +205,12 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return 列表值预查询SQL对象
      */
-    private PrepareStatement getListPrepareStatement(boolean useAlias) {
+    private PrepareStatement<KeyValuePair> getListPrepareStatement(boolean useAlias) {
         Collection<?> values = (Collection<?>) value;
-        String sql = getColumnName(column, useAlias) + " " + operator.getValue() + "(" + CriteriaMaker.getIn(values.size()) + ")";
-        return new PrepareStatement(sql, new ArrayList<>(values));
+        String columnName = getColumnName(column, useAlias);
+        String sql = columnName + " " + operator.getValue() + "(" + CriteriaMaker.getIn(values.size()) + ")";
+        List<KeyValuePair> keyValuePairs = values.stream().map(v -> new KeyValuePair(columnName, v)).collect(Collectors.toList());
+        return new PrepareStatement<>(sql, keyValuePairs);
     }
 
 

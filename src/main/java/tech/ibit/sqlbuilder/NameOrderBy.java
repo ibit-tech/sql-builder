@@ -3,6 +3,8 @@ package tech.ibit.sqlbuilder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.Collections;
+
 /**
  * 指定名称的OrderBy
  *
@@ -41,8 +43,8 @@ public class NameOrderBy implements IOrderBy {
      * @return BETWEEN值预查询SQL对象
      */
     @Override
-    public PrepareStatement getPrepareStatement(boolean useAlias) {
+    public PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
         String prepareSql = name + (desc ? " DESC" : "");
-        return new PrepareStatement(prepareSql, null);
+        return new PrepareStatement<>(prepareSql, Collections.emptyList());
     }
 }

@@ -1,7 +1,6 @@
 package tech.ibit.sqlbuilder;
 
 import org.apache.commons.lang.StringUtils;
-import tech.ibit.sqlbuilder.annotation.DbTable;
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
 import java.util.ArrayList;
@@ -55,23 +54,23 @@ class SqlStatement extends AbstractSqlStatement {
     /**
      * 增加`JOIN ON`语句
      *
-     * @param type        `JOIN ON 类型`
-     * @param table       表
+     * @param type          `JOIN ON 类型`
+     * @param table         表
      * @param criteriaItems ON条件
      */
     void addComplexJoinOn(SqlStatement.JoinOnType type, Table table, List<CriteriaItem> criteriaItems) {
         StringBuilder sb = new StringBuilder();
-        List<Object> params = new ArrayList<>();
+        List<KeyValuePair> params = new ArrayList<>();
         sb.append(null == type ? "" : (type.name() + " "))
                 .append("JOIN ")
                 .append(getTableName(table))
                 .append(" ON ");
-        for (int i = 0; i < criteriaItems.size(); i ++) {
+        for (int i = 0; i < criteriaItems.size(); i++) {
             if (i != 0) {
                 sb.append(" AND ");
             }
             CriteriaItem item = criteriaItems.get(i);
-            PrepareStatement prepareStatement = item.getPrepareStatement(useAlias);
+            PrepareStatement<KeyValuePair> prepareStatement = item.getPrepareStatement(useAlias);
 
             sb.append(prepareStatement.getPrepareSql());
             params.addAll(prepareStatement.getValues());
@@ -120,7 +119,7 @@ class SqlStatement extends AbstractSqlStatement {
     /**
      * 增加删除的表
      *
-     * @param table
+     * @param table 表对象
      */
     void addDeleteTable(Table table) {
         deleteTables.add((useAlias ? table.getAlias() : table.getName()) + ".*");
@@ -130,7 +129,7 @@ class SqlStatement extends AbstractSqlStatement {
     /**
      * 增加删除的表
      *
-     * @param tables
+     * @param tables 表对象列表
      */
     void addDeleteTable(List<Table> tables) {
         tables.forEach(this::addDeleteTable);
@@ -142,8 +141,9 @@ class SqlStatement extends AbstractSqlStatement {
      * @param set 列-值对
      */
     void addSet(ColumnValue set) {
-        sets.add(CriteriaMaker.equalsTo(getColumnName(set.getColumn())));
-        values.add(set.getValue());
+        String columnName = getColumnName(set.getColumn());
+        sets.add(CriteriaMaker.equalsTo(columnName));
+        setValues.add(new KeyValuePair(columnName, set.getValue()));
     }
 
     /**
@@ -163,7 +163,7 @@ class SqlStatement extends AbstractSqlStatement {
     void addIncreaseSet(ColumnValue set) {
         String columnName = getColumnName(set.getColumn());
         sets.add(CriteriaMaker.equalsTo(columnName, columnName + " + ?"));
-        values.add(set.getValue());
+        setValues.add(new KeyValuePair(columnName, set.getValue()));
     }
 
     /**
@@ -183,7 +183,7 @@ class SqlStatement extends AbstractSqlStatement {
     void addDecreaseSet(ColumnValue set) {
         String columnName = getColumnName(set.getColumn());
         sets.add(CriteriaMaker.equalsTo(columnName, columnName + " - ?"));
-        values.add(set.getValue());
+        setValues.add(new KeyValuePair(columnName, set.getValue()));
     }
 
     /**
@@ -234,14 +234,14 @@ class SqlStatement extends AbstractSqlStatement {
      * @param criteria 条件
      */
     void addWhere(Criteria criteria) {
-        StringBuilder whereSQL = new StringBuilder();
+        StringBuilder whereSql = new StringBuilder();
         if (!where.isEmpty()) {
-            whereSQL.append(criteria.getLogical().name()).append(" ");
+            whereSql.append(criteria.getLogical().name()).append(" ");
         }
-        PrepareStatement prepareStatement = criteria.getPrepareStatement(useAlias);
+        PrepareStatement<KeyValuePair> prepareStatement = criteria.getPrepareStatement(useAlias);
         if (null != prepareStatement) {
-            whereSQL.append(prepareStatement.getPrepareSql());
-            where.add(whereSQL.toString());
+            whereSql.append(prepareStatement.getPrepareSql());
+            where.add(whereSql.toString());
             if (CollectionUtils.isNotEmpty(prepareStatement.getValues())) {
                 whereParams.addAll(prepareStatement.getValues());
             }
@@ -282,7 +282,7 @@ class SqlStatement extends AbstractSqlStatement {
      * @param orderBy 排序
      */
     void addOrderBy(IOrderBy orderBy) {
-        PrepareStatement prepareStatement = orderBy.getPrepareStatement(useAlias);
+        PrepareStatement<KeyValuePair> prepareStatement = orderBy.getPrepareStatement(useAlias);
         if (null != prepareStatement) {
             this.orderBy.add(prepareStatement.getPrepareSql());
             if (CollectionUtils.isNotEmpty(prepareStatement.getValues())) {
@@ -306,14 +306,14 @@ class SqlStatement extends AbstractSqlStatement {
      * @param having having内容
      */
     void addHaving(Having having) {
-        StringBuilder havingSQL = new StringBuilder();
+        StringBuilder havingSql = new StringBuilder();
         if (!this.having.isEmpty()) {
-            havingSQL.append(having.getLogical().name()).append(" ");
+            havingSql.append(having.getLogical().name()).append(" ");
         }
-        PrepareStatement prepareStatement = having.getPrepareStatement();
+        PrepareStatement<KeyValuePair> prepareStatement = having.getPrepareStatement();
         if (null != prepareStatement) {
-            havingSQL.append(prepareStatement.getPrepareSql());
-            this.having.add(havingSQL.toString());
+            havingSql.append(prepareStatement.getPrepareSql());
+            this.having.add(havingSql.toString());
             if (CollectionUtils.isNotEmpty(prepareStatement.getValues())) {
                 havingParams.addAll(prepareStatement.getValues());
             }

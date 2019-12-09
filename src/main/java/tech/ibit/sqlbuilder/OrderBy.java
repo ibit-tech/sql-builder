@@ -3,6 +3,8 @@ package tech.ibit.sqlbuilder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.Collections;
+
 /**
  * 定义排序类
  *
@@ -40,9 +42,9 @@ public class OrderBy implements IOrderBy {
      * @return BETWEEN值预查询SQL对象
      */
     @Override
-    public PrepareStatement getPrepareStatement(boolean useAlias) {
+    public PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
         String columnName = useAlias ? column.getNameWithTableAlias() : column.getName();
         String prepareSql = columnName + (desc ? " DESC" : "");
-        return new PrepareStatement(prepareSql, null);
+        return new PrepareStatement<>(prepareSql, Collections.emptyList());
     }
 }

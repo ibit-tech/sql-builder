@@ -13,7 +13,7 @@ import java.util.List;
  */
 @Data
 @AllArgsConstructor
-public class PrepareStatement {
+public class PrepareStatement<T> {
 
     /**
      * 预查询SQL
@@ -23,5 +23,5 @@ public class PrepareStatement {
     /**
      * 插入值列表
      */
-    private List<?> values;
+    private List<T> values;
 }

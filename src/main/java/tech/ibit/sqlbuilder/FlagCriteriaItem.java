@@ -61,26 +61,26 @@ public class FlagCriteriaItem extends CriteriaItem {
      * @return 预查询SQL对象
      */
     @Override
-    PrepareStatement getPrepareStatement(boolean useAlias) {
+    PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
 
-        StringBuilder whereSQL = new StringBuilder();
+        StringBuilder whereSql = new StringBuilder();
         String columnName = getColumnName(getColumn(), useAlias);
         switch (containsType) {
             case CONTAINS_ALL:
-                whereSQL.append(columnName)
+                whereSql.append(columnName)
                         .append(" & ? = ")
                         .append(columnName);
                 break;
             case CONTAINS_NONE:
-                whereSQL.append(columnName)
+                whereSql.append(columnName)
                         .append(" & ? = 0");
                 break;
             case CONTAINS_ANY:
-                whereSQL.append(columnName)
+                whereSql.append(columnName)
                         .append(" & ? <> 0");
                 break;
             default:
         }
-        return new PrepareStatement(whereSQL.toString(), Collections.singletonList(getValue()));
+        return new PrepareStatement<>(whereSql.toString(), Collections.singletonList(new KeyValuePair(columnName, getValue())));
     }
 }

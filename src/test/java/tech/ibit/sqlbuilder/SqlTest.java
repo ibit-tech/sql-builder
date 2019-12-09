@@ -70,7 +70,7 @@ public class SqlTest extends CommonTest {
                 .selectDistinctPo(UserPo.class)
                 .from(UserProperties.TABLE).limit(1000);
         assertParamsEquals("SELECT DISTINCT u.user_id, u.login_id, u.email, u.mobile_phone, u.type FROM user u LIMIT ?, ?",
-                Arrays.asList(0, 1000), sql.getSqlParams());
+                Arrays.asList("$start", 0, "$limit", 1000), sql.getSqlParams());
     }
 
     @Test
@@ -107,7 +107,8 @@ public class SqlTest extends CommonTest {
         Sql sql = new Sql()
                 .deleteFrom(UserProperties.TABLE)
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-        assertParamsEquals("DELETE FROM user WHERE user_id = ?", Collections.singletonList(1), sql.getSqlParams());
+        assertParamsEquals("DELETE FROM user WHERE user_id = ?",
+                Arrays.asList("user_id", 1), sql.getSqlParams());
     }
 
 
@@ -125,7 +126,8 @@ public class SqlTest extends CommonTest {
         Sql sql = new Sql()
                 .deleteTableFrom(UserProperties.TABLE)
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-        assertParamsEquals("DELETE u.* FROM user u WHERE u.user_id = ?", Collections.singletonList(1), sql.getSqlParams());
+        assertParamsEquals("DELETE u.* FROM user u WHERE u.user_id = ?",
+                Arrays.asList("u.user_id", 1), sql.getSqlParams());
     }
 
 
@@ -136,7 +138,7 @@ public class SqlTest extends CommonTest {
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1))
                 .leftJoinOn(OrganizationProperties.TABLE, Arrays.asList(UserProperties.orgId, OrganizationProperties.orgId));
         assertParamsEquals("DELETE u.* FROM user u LEFT JOIN organization o ON u.org_id = o.org_id WHERE u.user_id = ?",
-                Collections.singletonList(1), sql.getSqlParams());
+                Arrays.asList("u.user_id", 1), sql.getSqlParams());
     }
 
     @Test
@@ -155,7 +157,8 @@ public class SqlTest extends CommonTest {
                 .update(UserProperties.TABLE)
                 .set(new ColumnValue(UserProperties.name, "IBIT"))
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-        assertParamsEquals("UPDATE user u SET u.name = ? WHERE u.user_id = ?", Arrays.asList("IBIT", 1), sql.getSqlParams());
+        assertParamsEquals("UPDATE user u SET u.name = ? WHERE u.user_id = ?",
+                Arrays.asList("u.name", "IBIT", "u.user_id", 1), sql.getSqlParams());
     }
 
     @Test
@@ -165,7 +168,8 @@ public class SqlTest extends CommonTest {
                 .values(Arrays.asList(new ColumnValue(UserProperties.name, "IBIT")
                         , new ColumnValue(UserProperties.loginId, "188")
                         , new ColumnValue(UserProperties.avatarId, null)));
-        assertParamsEquals("INSERT INTO user(name, login_id, avatar_id) VALUES(?, ?, ?)", Arrays.asList("IBIT", "188", null), sql.getSqlParams());
+        assertParamsEquals("INSERT INTO user(name, login_id, avatar_id) VALUES(?, ?, ?)",
+                Arrays.asList("name", "IBIT", "login_id", "188", "avatar_id", null), sql.getSqlParams());
 
     }
 
@@ -178,7 +182,7 @@ public class SqlTest extends CommonTest {
                         , new ColumnValue(UserProperties.avatarId, null)))
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
         assertParamsEquals("UPDATE user u SET u.name = ?, u.login_id = ?, u.avatar_id = ? WHERE u.user_id = ?",
-                Arrays.asList("IBIT", "188", null, 1), sql.getSqlParams());
+                Arrays.asList("u.name", "IBIT", "u.login_id", "188", "u.avatar_id", null, "u.user_id", 1), sql.getSqlParams());
     }
 
     @Test
@@ -248,7 +252,7 @@ public class SqlTest extends CommonTest {
                 .complexLeftJoinOn(ProjectProperties.TABLE, Collections.singletonList(CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId)));
         SqlParams sqlParams = sql.getSqlParams();
         assertEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id", sqlParams.getSql());
-        assertTrue(sqlParams.getParams().isEmpty());
+        assertTrue(sqlParams.getParamDetails().isEmpty());
 
 
         sql = new Sql()
@@ -260,7 +264,7 @@ public class SqlTest extends CommonTest {
         sqlParams = sql.getSqlParams();
         assertEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p "
                 + "ON u.current_project_id = p.project_id AND p.name LIKE ?", sqlParams.getSql());
-        assertList(sqlParams.getParams(), 1, Collections.singletonList("小%"));
+        assertList(sqlParams.getParamDetails(), 1, Arrays.asList("p.name", "小%"));
     }
 
     @Test
@@ -271,7 +275,7 @@ public class SqlTest extends CommonTest {
                 .complexRightJoinOn(ProjectProperties.TABLE, Collections.singletonList(CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId)));
         SqlParams sqlParams = sql.getSqlParams();
         assertEquals("SELECT u.user_id, u.name, p.name FROM user u RIGHT JOIN project p ON u.current_project_id = p.project_id", sqlParams.getSql());
-        assertTrue(sqlParams.getParams().isEmpty());
+        assertTrue(sqlParams.getParamDetails().isEmpty());
 
 
         sql = new Sql()
@@ -282,7 +286,7 @@ public class SqlTest extends CommonTest {
                         CriteriaItemMaker.like(ProjectProperties.name, "小%")));
         sqlParams = sql.getSqlParams();
         assertEquals("SELECT u.user_id, u.name, p.name FROM user u RIGHT JOIN project p ON u.current_project_id = p.project_id AND p.name LIKE ?", sqlParams.getSql());
-        assertList(sqlParams.getParams(), 1, Collections.singletonList("小%"));
+        assertList(sqlParams.getParamDetails(), 1, Arrays.asList("p.name", "小%"));
     }
 
     @Test
@@ -293,7 +297,7 @@ public class SqlTest extends CommonTest {
                 .complexFullJoinOn(ProjectProperties.TABLE, Collections.singletonList(CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId)));
         SqlParams sqlParams = sql.getSqlParams();
         assertEquals("SELECT u.user_id, u.name, p.name FROM user u FULL JOIN project p ON u.current_project_id = p.project_id", sqlParams.getSql());
-        assertTrue(sqlParams.getParams().isEmpty());
+        assertTrue(sqlParams.getParamDetails().isEmpty());
 
 
         sql = new Sql()
@@ -304,7 +308,7 @@ public class SqlTest extends CommonTest {
                         CriteriaItemMaker.like(ProjectProperties.name, "小%")));
         sqlParams = sql.getSqlParams();
         assertEquals("SELECT u.user_id, u.name, p.name FROM user u FULL JOIN project p ON u.current_project_id = p.project_id AND p.name LIKE ?", sqlParams.getSql());
-        assertList(sqlParams.getParams(), 1, Collections.singletonList("小%"));
+        assertList(sqlParams.getParamDetails(), 1, Arrays.asList("p.name", "小%"));
     }
 
 
@@ -324,7 +328,7 @@ public class SqlTest extends CommonTest {
                 .complexInnerJoinOn(parentRegion, Collections.singletonList(CriteriaItemMaker.equalsTo(regionParentCode, parentRegionCode)));
         SqlParams sqlParams = sql.getSqlParams();
         assertEquals("SELECT pr.name, r.name FROM region r INNER JOIN region pr ON r.parent_code = pr.code", sqlParams.getSql());
-        assertTrue(sqlParams.getParams().isEmpty());
+        assertTrue(sqlParams.getParamDetails().isEmpty());
 
 
         sql = new Sql()
@@ -335,7 +339,7 @@ public class SqlTest extends CommonTest {
                         CriteriaItemMaker.equalsTo(regionParentCode, "110")));
         sqlParams = sql.getSqlParams();
         assertEquals("SELECT pr.name, r.name FROM region r INNER JOIN region pr ON r.parent_code = pr.code AND r.parent_code = ?", sqlParams.getSql());
-        assertList(sqlParams.getParams(), 1, Collections.singletonList("110"));
+        assertList(sqlParams.getParamDetails(), 1, Arrays.asList("r.parent_code", "110"));
 
     }
 
@@ -372,7 +376,7 @@ public class SqlTest extends CommonTest {
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name))
                 .from(UserProperties.TABLE)
                 .where(Criteria.ands(Arrays.asList(Criteria.ors(xiaoLikeItems), userIdItem)));
-        assertList(sql.getSqlParams().getParams(), 3, Arrays.asList("小%", "xiao%", 100));
+        assertList(sql.getSqlParams().getParamDetails(), 3, Arrays.asList("u.name", "小%", "u.email", "xiao%", "u.user_id", 100));
 
 
         sql = new Sql()
@@ -385,7 +389,7 @@ public class SqlTest extends CommonTest {
                         )
                 );
         assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? OR u.email LIKE ?) AND u.user_id > ?",
-                Arrays.asList("小%", "xiao%", 100), sql.getSqlParams());
+                Arrays.asList("u.name", "小%", "u.email", "xiao%", "u.user_id", 100), sql.getSqlParams());
 
         sql = new Sql()
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name))
@@ -400,13 +404,14 @@ public class SqlTest extends CommonTest {
                                 ), type2Item))
                 );
         assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE (((u.name LIKE ? OR u.email LIKE ?) AND u.user_id > ?) AND u.type = ?) OR u.type = ?",
-                Arrays.asList("小%", "xiao%", 100, 1, 2), sql.getSqlParams());
+                Arrays.asList("u.name", "小%", "u.email", "xiao%", "u.user_id", 100, "u.type", 1, "u.type", 2), sql.getSqlParams());
     }
 
-    private void assertList(List<Object> actualList, int size, List<Object> expectList) {
+    private void assertList(List<KeyValuePair> actualList, int size, List<Object> expectKeyValuePairs) {
         assertEquals(actualList.size(), size);
+        List<KeyValuePair> keyValuePairs = getKeyValuePairs(expectKeyValuePairs);
         for (int i = 0; i < actualList.size(); i++) {
-            assertEquals(actualList.get(i), expectList.get(i));
+            assertEquals(actualList.get(i), keyValuePairs.get(i));
         }
     }
 
@@ -418,7 +423,7 @@ public class SqlTest extends CommonTest {
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1))
                 .limit(1);
         assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id = ? LIMIT ?, ?"
-                , Arrays.asList(1, 0, 1), sql.getSqlParams());
+                , Arrays.asList("u.user_id", 1, "$start", 0, "$limit", 1), sql.getSqlParams());
 
         sql = new Sql()
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name))
@@ -427,7 +432,7 @@ public class SqlTest extends CommonTest {
                         Arrays.asList(CriteriaItemMaker.like(UserProperties.name, "小%"), CriteriaItemMaker.like(UserProperties.email, "xiao%"))))
                 .limit(1);
         assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? OR u.email LIKE ?) LIMIT ?, ?"
-                , Arrays.asList("小%", "xiao%", 0, 1), sql.getSqlParams());
+                , Arrays.asList("u.name", "小%", "u.email", "xiao%", "$start", 0, "$limit", 1), sql.getSqlParams());
 
         sql = new Sql()
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name))
@@ -437,7 +442,7 @@ public class SqlTest extends CommonTest {
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.type, 1))
                 .limit(1);
         assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? OR u.email LIKE ?) AND u.type = ? LIMIT ?, ?"
-                , Arrays.asList("小%", "xiao%", 1, 0, 1), sql.getSqlParams());
+                , Arrays.asList("u.name", "小%", "u.email", "xiao%", "u.type", 1, "$start", 0, "$limit", 1), sql.getSqlParams());
     }
 
     @Test
@@ -448,7 +453,7 @@ public class SqlTest extends CommonTest {
                 .orWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1))
                 .limit(1);
         assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id = ? LIMIT ?, ?",
-                Arrays.asList(1, 0, 1), sql.getSqlParams());
+                Arrays.asList("u.user_id", 1, "$start", 0, "$limit", 1), sql.getSqlParams());
 
         sql = new Sql()
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name))
@@ -457,7 +462,7 @@ public class SqlTest extends CommonTest {
                         Arrays.asList(CriteriaItemMaker.like(UserProperties.name, "小%"), CriteriaItemMaker.like(UserProperties.email, "xiao%"))))
                 .limit(1);
         assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? AND u.email LIKE ?) LIMIT ?, ?",
-                Arrays.asList("小%", "xiao%", 0, 1), sql.getSqlParams());
+                Arrays.asList("u.name", "小%", "u.email", "xiao%", "$start", 0, "$limit", 1), sql.getSqlParams());
 
         sql = new Sql()
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name))
@@ -467,7 +472,7 @@ public class SqlTest extends CommonTest {
                 .orWhere(CriteriaItemMaker.equalsTo(UserProperties.type, 1))
                 .limit(1);
         assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? AND u.email LIKE ?) OR u.type = ? LIMIT ?, ?",
-                Arrays.asList("小%", "xiao%", 1, 0, 1), sql.getSqlParams());
+                Arrays.asList("u.name", "小%", "u.email", "xiao%", "u.type", 1, "$start", 0, "$limit", 1), sql.getSqlParams());
     }
 
     @Test
@@ -479,7 +484,7 @@ public class SqlTest extends CommonTest {
                 .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new OrderBy(UserProperties.userId, true)))
                 .limit(1000);
         assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id, u.user_id DESC LIMIT ?, ?",
-                Arrays.asList(0, 1000), sql.getSqlParams());
+                Arrays.asList("$start", 0, "$limit", 1000), sql.getSqlParams());
     }
 
 
@@ -491,7 +496,7 @@ public class SqlTest extends CommonTest {
                 .leftJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId))
                 .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new CustomOrderBy(UserProperties.userId, Arrays.asList(1, 2, 3), true)));
         assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
-                + ", FIELD(u.user_id, ?, ?, ?) DESC", Arrays.asList(1, 2, 3), sql.getSqlParams());
+                + ", FIELD(u.user_id, ?, ?, ?) DESC", Arrays.asList("u.user_id", 1, "u.user_id", 2, "u.user_id", 3), sql.getSqlParams());
     }
 
     @Test
@@ -511,7 +516,7 @@ public class SqlTest extends CommonTest {
                         new OrderBy(UserProperties.gender),
                         new NameOrderBy("min_age", true)));
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? " +
-                "GROUP BY u.gender HAVING min_age >= ? ORDER BY u.gender, min_age DESC", Arrays.asList(0, 1), sql.getSqlParams());
+                "GROUP BY u.gender HAVING min_age >= ? ORDER BY u.gender, min_age DESC", Arrays.asList("u.age", 0, "min_age", 1), sql.getSqlParams());
     }
 
     @Test
@@ -523,7 +528,7 @@ public class SqlTest extends CommonTest {
                 .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new OrderBy(UserProperties.userId, true)))
                 .limit(10);
         assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
-                + ", u.user_id DESC LIMIT ?, ?", Arrays.asList(0, 10), sql.getSqlParams());
+                + ", u.user_id DESC LIMIT ?, ?", Arrays.asList("$start", 0, "$limit", 10), sql.getSqlParams());
 
         sql = new Sql()
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
@@ -532,7 +537,7 @@ public class SqlTest extends CommonTest {
                 .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new OrderBy(UserProperties.userId, true)))
                 .limit(10, 20);
         assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
-                + ", u.user_id DESC LIMIT ?, ?", Arrays.asList(10, 20), sql.getSqlParams());
+                + ", u.user_id DESC LIMIT ?, ?", Arrays.asList("$start", 10, "$limit", 20), sql.getSqlParams());
     }
 
 
@@ -542,7 +547,7 @@ public class SqlTest extends CommonTest {
                 .update(UserProperties.TABLE)
                 .increaseSet(new ColumnValue(UserProperties.loginTimes, 2))
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-        assertParamsEquals("UPDATE user u SET u.login_times = u.login_times + ? WHERE u.user_id = ?", Arrays.asList(2, 1), sql.getSqlParams());
+        assertParamsEquals("UPDATE user u SET u.login_times = u.login_times + ? WHERE u.user_id = ?", Arrays.asList("u.login_times", 2, "u.user_id", 1), sql.getSqlParams());
     }
 
 
@@ -552,7 +557,8 @@ public class SqlTest extends CommonTest {
                 .update(UserProperties.TABLE)
                 .decreaseSet(new ColumnValue(UserProperties.loginTimes, 2))
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-        assertParamsEquals("UPDATE user u SET u.login_times = u.login_times - ? WHERE u.user_id = ?", Arrays.asList(2, 1), sql.getSqlParams());
+        assertParamsEquals("UPDATE user u SET u.login_times = u.login_times - ? WHERE u.user_id = ?"
+                , Arrays.asList("u.login_times", 2, "u.user_id", 1), sql.getSqlParams());
     }
 
     @Test
@@ -562,20 +568,23 @@ public class SqlTest extends CommonTest {
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name))
                 .from(UserProperties.TABLE)
                 .andWhere(CriteriaItemMaker.containsNoneFlags(UserProperties.userId, 1));
-        assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id & ? = 0", Collections.singletonList(1), sql.getSqlParams());
+        assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id & ? = 0",
+                Arrays.asList("u.user_id", 1), sql.getSqlParams());
 
         sql = new Sql()
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name))
                 .from(UserProperties.TABLE)
                 .andWhere(CriteriaItemMaker.containsAllFlags(UserProperties.userId, 1));
-        assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id & ? = u.user_id", Collections.singletonList(1), sql.getSqlParams());
+        assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id & ? = u.user_id",
+                Arrays.asList("u.user_id", 1), sql.getSqlParams());
 
 
         sql = new Sql()
                 .select(Arrays.asList(UserProperties.userId, UserProperties.name))
                 .from(UserProperties.TABLE)
                 .andWhere(CriteriaItemMaker.containsAnyFlags(UserProperties.userId, 1));
-        assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id & ? <> 0", Collections.singletonList(1), sql.getSqlParams());
+        assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id & ? <> 0",
+                Arrays.asList("u.user_id", 1), sql.getSqlParams());
 
 
         sql = new Sql()
@@ -583,7 +592,8 @@ public class SqlTest extends CommonTest {
                 .from(UserProperties.TABLE)
                 .andWhere(CriteriaItemMaker.containsAnyFlags(UserProperties.userId, 1))
                 .andWhere(CriteriaItemMaker.like(UserProperties.name, "%IBIT%"));
-        assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id & ? <> 0 AND u.name LIKE ?", Arrays.asList(1, "%IBIT%"), sql.getSqlParams());
+        assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id & ? <> 0 AND u.name LIKE ?",
+                Arrays.asList("u.user_id", 1, "u.name", "%IBIT%"), sql.getSqlParams());
 
     }
 
@@ -603,7 +613,7 @@ public class SqlTest extends CommonTest {
                 .groupBy(UserProperties.gender)
                 .having(Having.and(HavingItemMaker.greaterThanOrEqualsTo("min_age", 1)));
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender HAVING min_age >= ?",
-                Arrays.asList(0, 1), sql.getSqlParams());
+                Arrays.asList("u.age", 0, "min_age", 1), sql.getSqlParams());
 
 
         sql = new Sql()
@@ -618,7 +628,7 @@ public class SqlTest extends CommonTest {
                 .groupBy(UserProperties.gender)
                 .andHaving(HavingItemMaker.greaterThanOrEqualsTo("min_age", 1));
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender HAVING min_age >= ?",
-                Arrays.asList(0, 1), sql.getSqlParams());
+                Arrays.asList("u.age", 0, "min_age", 1), sql.getSqlParams());
 
 
         sql = new Sql()
@@ -636,7 +646,7 @@ public class SqlTest extends CommonTest {
                         Having.and(HavingItemMaker.greaterThanOrEqualsTo("max_age", 2))
                 ));
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender HAVING min_age >= ? AND max_age >= ?",
-                Arrays.asList(0, 1, 2), sql.getSqlParams());
+                Arrays.asList("u.age", 0, "min_age", 1, "max_age", 2), sql.getSqlParams());
 
 
         sql = new Sql()
@@ -656,7 +666,7 @@ public class SqlTest extends CommonTest {
                         )
                 ));
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
-                + "HAVING min_age >= ? AND max_age >= ?", Arrays.asList(0, 1, 2), sql.getSqlParams());
+                + "HAVING min_age >= ? AND max_age >= ?", Arrays.asList("u.age", 0, "min_age", 1, "max_age", 2), sql.getSqlParams());
 
         sql = new Sql()
                 .select(
@@ -673,7 +683,7 @@ public class SqlTest extends CommonTest {
                         Having.or(HavingItemMaker.greaterThanOrEqualsTo("max_age", 2))
                 ));
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
-                + "HAVING min_age >= ? OR max_age >= ?", Arrays.asList(0, 1, 2), sql.getSqlParams());
+                + "HAVING min_age >= ? OR max_age >= ?", Arrays.asList("u.age", 0, "min_age", 1, "max_age", 2), sql.getSqlParams());
 
 
         sql = new Sql()
@@ -693,7 +703,7 @@ public class SqlTest extends CommonTest {
                         )
                 ));
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
-                + "HAVING min_age >= ? OR max_age >= ?", Arrays.asList(0, 1, 2), sql.getSqlParams());
+                + "HAVING min_age >= ? OR max_age >= ?", Arrays.asList("u.age", 0, "min_age", 1, "max_age", 2), sql.getSqlParams());
 
 
         // 复杂的Having语句
@@ -721,7 +731,8 @@ public class SqlTest extends CommonTest {
                                 ))
                 );
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
-                + "HAVING (min_age >= ? OR max_age >= ?) AND (min_age >= ? OR max_age >= ?)", Arrays.asList(0, 1, 2, 3, 4), sql.getSqlParams());
+                + "HAVING (min_age >= ? OR max_age >= ?) AND (min_age >= ? OR max_age >= ?)",
+                Arrays.asList("u.age", 0, "min_age", 1, "max_age", 2, "min_age", 3, "max_age", 4), sql.getSqlParams());
 
 
         // 复杂的Having语句
@@ -749,6 +760,7 @@ public class SqlTest extends CommonTest {
                                 ))
                 );
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
-                + "HAVING (min_age >= ? AND max_age >= ?) OR (min_age >= ? AND max_age >= ?)", Arrays.asList(0, 1, 2, 3, 4), sql.getSqlParams());
+                + "HAVING (min_age >= ? AND max_age >= ?) OR (min_age >= ? AND max_age >= ?)",
+                Arrays.asList("u.age", 0, "min_age", 1, "max_age", 2, "min_age", 3, "max_age", 4), sql.getSqlParams());
     }
 }

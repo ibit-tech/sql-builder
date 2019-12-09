@@ -143,14 +143,14 @@ public class Criteria {
      * @param useAlias 是否使用别名
      * @return 预查询SQL对象
      */
-    public PrepareStatement getPrepareStatement(boolean useAlias) {
+    public PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
         if (null == item && CollectionUtils.isEmpty(subCriterion)) {
             return null;
         }
-        StringBuilder whereSQL = new StringBuilder();
-        List<Object> whereParams = new ArrayList<>();
-        appendWhere(this, whereSQL, whereParams, useAlias);
-        return new PrepareStatement(whereSQL.toString(), whereParams);
+        StringBuilder whereSql = new StringBuilder();
+        List<KeyValuePair> whereParams = new ArrayList<>();
+        appendWhere(this, whereSql, whereParams, useAlias);
+        return new PrepareStatement<>(whereSql.toString(), whereParams);
     }
 
 
@@ -158,32 +158,32 @@ public class Criteria {
      * 扩展`where`语句
      *
      * @param criteria    条件
-     * @param whereSQL    `where`语句字串构造器
+     * @param whereSql    `where`语句字串构造器
      * @param whereParams `where`参数列表
      */
-    private void appendWhere(Criteria criteria, StringBuilder whereSQL, List<Object> whereParams, boolean useAlias) {
+    private void appendWhere(Criteria criteria, StringBuilder whereSql, List<KeyValuePair> whereParams, boolean useAlias) {
         if (null != criteria.getItem()) {
             CriteriaItem item = criteria.getItem();
-            PrepareStatement statement = item.getPrepareStatement(useAlias);
-            whereSQL.append(statement.getPrepareSql());
+            PrepareStatement<KeyValuePair> statement = item.getPrepareStatement(useAlias);
+            whereSql.append(statement.getPrepareSql());
             whereParams.addAll(statement.getValues());
         } else if (CollectionUtils.isNotEmpty(criteria.getSubCriterion())) {
             // 条件只有一个的时候优化
             if (1 == criteria.getSubCriterion().size()) {
-                appendWhere(criteria.getSubCriterion().get(0), whereSQL, whereParams, useAlias);
+                appendWhere(criteria.getSubCriterion().get(0), whereSql, whereParams, useAlias);
             } else {
-                whereSQL.append("(");
+                whereSql.append("(");
                 List<Criteria> subCriterion = criteria.getSubCriterion();
                 for (int i = 0; i < subCriterion.size(); i++) {
                     Criteria subCriteria = subCriterion.get(i);
                     if (0 != i) {
-                        whereSQL.append(" ").append(subCriteria.getLogical().name()).append(" ");
+                        whereSql.append(" ").append(subCriteria.getLogical().name()).append(" ");
                     }
                     if (null != subCriteria.getItem() || CollectionUtils.isNotEmpty(subCriteria.getSubCriterion())) {
-                        appendWhere(subCriteria, whereSQL, whereParams, useAlias);
+                        appendWhere(subCriteria, whereSql, whereParams, useAlias);
                     }
                 }
-                whereSQL.append(")");
+                whereSql.append(")");
             }
         }
     }

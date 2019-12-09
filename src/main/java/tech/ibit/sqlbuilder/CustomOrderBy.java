@@ -3,8 +3,8 @@ package tech.ibit.sqlbuilder;
 import lombok.Data;
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 自定义排序
@@ -49,12 +49,13 @@ public class CustomOrderBy extends OrderBy {
      * @return BETWEEN值预查询SQL对象
      */
     @Override
-    public PrepareStatement getPrepareStatement(boolean useAlias) {
+    public PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
         if (CollectionUtils.isEmpty(subOrders)) {
             return null;
         }
         String columnName = useAlias ? getColumn().getNameWithTableAlias() : getColumn().getName();
         String prepareSql = "FIELD(" + columnName + ", " + CriteriaMaker.getIn(subOrders.size()) + ")" + (isDesc() ? " DESC" : "");
-        return new PrepareStatement(prepareSql, Collections.unmodifiableList(subOrders));
+        List<KeyValuePair> subOrderKeyValuePairs = subOrders.stream().map(o -> new KeyValuePair(columnName, o)).collect(Collectors.toList());
+        return new PrepareStatement<>(prepareSql, subOrderKeyValuePairs);
     }
 }

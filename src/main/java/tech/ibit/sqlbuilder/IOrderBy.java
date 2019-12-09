@@ -14,5 +14,5 @@ public interface IOrderBy {
      * @param useAlias 是否使用别名
      * @return BETWEEN值预查询SQL对象
      */
-    PrepareStatement getPrepareStatement(boolean useAlias);
+    PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias);
 }

@@ -22,7 +22,7 @@ public class SqlParams {
     private String sql;
 
     /**
-     * 参数列表
+     * 参数列表（明细）
      */
-    private List<Object> params;
+    private List<KeyValuePair> paramDetails;
 }

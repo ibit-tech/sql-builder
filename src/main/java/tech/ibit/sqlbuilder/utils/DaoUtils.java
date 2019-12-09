@@ -232,25 +232,6 @@ public class DaoUtils {
     }
 
     /**
-     * 构造批量插入对象的SQL对象参数
-     * SQL语法 : `INSERT INTO table(column1, column2, ...) values(?, ?, ...)`
-     * <p>
-     * 与batchInsertInto差异在于，此方法的返回的参数对象的参数是List&lt;List&lt;Object&lt;&lt;(按照values分)
-     *
-     * @param pos     返回实体类列表
-     * @param columns 需要插入列
-     * @return SQL参数对象
-     * @see SqlParams
-     */
-    public static SqlParams batchInsertInto2(List pos, List<Column> columns) {
-        BatchInsertItems batchInsertItems = getBatchInsertItems(pos, columns);
-        return new Sql()
-                .batchInsertInto2(batchInsertItems.getTable())
-                .values(batchInsertItems.getColumns(), batchInsertItems.getValues())
-                .getSqlParams();
-    }
-
-    /**
      * 构造通过主键更新对象的SQL参数对象（支持单列或多列主键）
      *
      * @param updateObject 更新对象

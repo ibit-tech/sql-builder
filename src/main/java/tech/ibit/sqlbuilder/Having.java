@@ -130,14 +130,14 @@ public class Having {
      *
      * @return 预查询SQL对象
      */
-    public PrepareStatement getPrepareStatement() {
+    public PrepareStatement<KeyValuePair> getPrepareStatement() {
         if (null == item && CollectionUtils.isEmpty(subHavings)) {
             return null;
         }
-        StringBuilder havingSQL = new StringBuilder();
-        List<Object> havingParams = new ArrayList<>();
-        appendHaving(this, havingSQL, havingParams);
-        return new PrepareStatement(havingSQL.toString(), havingParams);
+        StringBuilder havingSql = new StringBuilder();
+        List<KeyValuePair> havingParams = new ArrayList<>();
+        appendHaving(this, havingSql, havingParams);
+        return new PrepareStatement<>(havingSql.toString(), havingParams);
     }
 
 
@@ -145,32 +145,32 @@ public class Having {
      * 扩展`where`语句
      *
      * @param having       条件
-     * @param havingSQL    `where`语句字串构造器
+     * @param havingSql    `where`语句字串构造器
      * @param havingParams `where`参数列表
      */
-    private void appendHaving(Having having, StringBuilder havingSQL, List<Object> havingParams) {
+    private void appendHaving(Having having, StringBuilder havingSql, List<KeyValuePair> havingParams) {
         if (null != having.getItem()) {
             HavingItem item = having.getItem();
-            havingSQL.append(item.getPrepareSql());
-            havingParams.add(item.getValue());
+            havingSql.append(item.getPrepareSql());
+            havingParams.add(new KeyValuePair(item.getColumnName(), item.getValue()));
         } else if (CollectionUtils.isNotEmpty(having.getSubHavings())) {
 
             // 只有一个字having的时候优化
             if (1 == having.getSubHavings().size()) {
-                appendHaving(having.getSubHavings().get(0), havingSQL, havingParams);
+                appendHaving(having.getSubHavings().get(0), havingSql, havingParams);
             } else {
-                havingSQL.append("(");
+                havingSql.append("(");
                 List<Having> subHavings = having.getSubHavings();
                 for (int i = 0; i < subHavings.size(); i++) {
                     Having subHaving = subHavings.get(i);
                     if (0 != i) {
-                        havingSQL.append(" ").append(subHaving.getLogical().name()).append(" ");
+                        havingSql.append(" ").append(subHaving.getLogical().name()).append(" ");
                     }
                     if (null != subHaving.getItem() || CollectionUtils.isNotEmpty(subHaving.getSubHavings())) {
-                        appendHaving(subHaving, havingSQL, havingParams);
+                        appendHaving(subHaving, havingSql, havingParams);
                     }
                 }
-                havingSQL.append(")");
+                havingSql.append(")");
             }
         }
     }

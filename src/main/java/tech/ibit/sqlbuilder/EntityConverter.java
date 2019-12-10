@@ -6,6 +6,7 @@ import tech.ibit.sqlbuilder.annotation.DbTable;
 import tech.ibit.sqlbuilder.exception.TableNotFoundException;
 import tech.ibit.sqlbuilder.exception.TableNotMatchedException;
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
+import tech.ibit.sqlbuilder.utils.MethodUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;

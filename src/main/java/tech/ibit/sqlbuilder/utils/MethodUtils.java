@@ -1,4 +1,6 @@
-package tech.ibit.sqlbuilder;
+package tech.ibit.sqlbuilder.utils;
+
+import lombok.experimental.UtilityClass;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -10,11 +12,8 @@ import java.lang.reflect.Modifier;
  * @author IBIT TECH
  * @version 1.0
  */
-class MethodUtils {
-
-    private MethodUtils() {
-    }
-
+@UtilityClass
+public class MethodUtils {
 
     /**
      * 获取指定类某个字段的Setter方法
@@ -24,7 +23,7 @@ class MethodUtils {
      * @return 字段的Setter方法
      */
     @SuppressWarnings("unchecked")
-    public static Method getSetterMethod(Class clazz, Field field) {
+    public Method getSetterMethod(Class clazz, Field field) {
         String fieldName = field.getName();
         String methodName = "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
         try {
@@ -47,7 +46,7 @@ class MethodUtils {
      * @return 字段的Setter方法
      */
     @SuppressWarnings("unchecked")
-    public static Method getGetterMethod(Class clazz, Field field) {
+    public Method getGetterMethod(Class clazz, Field field) {
         String prefix = (field.getType() == boolean.class || field.getType() == Boolean.class)
                 ? "is" : "get";
         String fieldName = field.getName();

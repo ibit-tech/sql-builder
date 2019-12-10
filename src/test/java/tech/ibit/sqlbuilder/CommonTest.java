@@ -10,6 +10,8 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * 公共测试类
+ *
  * @author IBIT TECH
  */
 public class CommonTest {
@@ -17,9 +19,9 @@ public class CommonTest {
     /**
      * 断言参数相等
      *
-     * @param sql       sql
-     * @param paramKeyValuePairs  参数键值对
-     * @param sqlParams sql参数对象
+     * @param sql                sql
+     * @param paramKeyValuePairs 参数键值对
+     * @param sqlParams          sql参数对象
      */
     public void assertParamsEquals(String sql, List<Object> paramKeyValuePairs, SqlParams sqlParams) {
         assertEquals(new SqlParams(sql, getKeyValuePairs(paramKeyValuePairs)).toString(), sqlParams.toString());
@@ -37,7 +39,12 @@ public class CommonTest {
     }
 
 
-
+    /**
+     * 构造KeyValuePair列表
+     *
+     * @param paramKeyValuePairs KeyValue对
+     * @return KeyValuePair列表
+     */
     public List<KeyValuePair> getKeyValuePairs(Object... paramKeyValuePairs) {
         if (ArrayUtils.isEmpty(paramKeyValuePairs)) {
             return Collections.emptyList();
@@ -50,6 +57,12 @@ public class CommonTest {
     }
 
 
+    /**
+     * 构造KeyValuePair列表
+     *
+     * @param paramKeyValuePairs KeyValue对列表
+     * @return KeyValuePair列表
+     */
     public List<KeyValuePair> getKeyValuePairs(List<Object> paramKeyValuePairs) {
         if (CollectionUtils.isEmpty(paramKeyValuePairs)) {
             return Collections.emptyList();

@@ -173,12 +173,12 @@ class AbstractSqlStatement {
     String lastClause;
 
     /**
-     * 查询开始，默认为0
+     * 查询开始
      */
     private int start = -1;
 
     /**
-     * 查询条数，默认为1000
+     * 查询条数
      */
     private int limit = -1;
 

@@ -731,7 +731,7 @@ public class SqlTest extends CommonTest {
                                 ))
                 );
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
-                + "HAVING (min_age >= ? OR max_age >= ?) AND (min_age >= ? OR max_age >= ?)",
+                        + "HAVING (min_age >= ? OR max_age >= ?) AND (min_age >= ? OR max_age >= ?)",
                 Arrays.asList("u.age", 0, "min_age", 1, "max_age", 2, "min_age", 3, "max_age", 4), sql.getSqlParams());
 
 
@@ -760,7 +760,7 @@ public class SqlTest extends CommonTest {
                                 ))
                 );
         assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
-                + "HAVING (min_age >= ? AND max_age >= ?) OR (min_age >= ? AND max_age >= ?)",
+                        + "HAVING (min_age >= ? AND max_age >= ?) OR (min_age >= ? AND max_age >= ?)",
                 Arrays.asList("u.age", 0, "min_age", 1, "max_age", 2, "min_age", 3, "max_age", 4), sql.getSqlParams());
     }
 }

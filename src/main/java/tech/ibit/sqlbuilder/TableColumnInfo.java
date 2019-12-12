@@ -2,11 +2,11 @@ package tech.ibit.sqlbuilder;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class TableColumnInfo {
 
     /**
@@ -25,14 +26,9 @@ public class TableColumnInfo {
     private Table table;
 
     /**
-     * 主键字段
+     * 列
      */
-    private List<Column> ids;
-
-    /**
-     * 列字段
-     */
-    private List<Column> columns;
+    private List<ColumnInfo> columnInfoList;
 
     /**
      * 获取非主键列
@@ -40,17 +36,36 @@ public class TableColumnInfo {
      * @return 非主键列
      */
     public List<Column> getNotIdColumns() {
-        if (CollectionUtils.isEmpty(ids)) {
-            return columns;
-        }
-        if (CollectionUtils.isEmpty(columns)) {
+        if (CollectionUtils.isEmpty(columnInfoList)) {
             return Collections.emptyList();
         }
-        Set<String> ignoreColumnAlias = ids.stream()
-                .map(Column::getNameWithTableAlias)
-                .collect(Collectors.toSet());
-        return columns.stream()
-                .filter(column -> !ignoreColumnAlias.contains(column.getNameWithTableAlias()))
-                .collect(Collectors.toList());
+        return columnInfoList.stream().filter(c -> !c.isId())
+                .map(ColumnInfo::getColumn).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取主键列
+     *
+     * @return 主键列
+     */
+    public List<Column> getIds() {
+        if (CollectionUtils.isEmpty(columnInfoList)) {
+            return Collections.emptyList();
+        }
+        return columnInfoList.stream().filter(ColumnInfo::isId)
+                .map(ColumnInfo::getColumn).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取列
+     *
+     * @return 列
+     */
+    public List<Column> getColumns() {
+        if (CollectionUtils.isEmpty(columnInfoList)) {
+            return Collections.emptyList();
+        }
+        return columnInfoList.stream()
+                .map(ColumnInfo::getColumn).collect(Collectors.toList());
     }
 }

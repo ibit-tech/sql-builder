@@ -402,7 +402,6 @@ abstract class AbstractSql<T> {
     }
 
 
-
     /**
      * `LEFT JOIN table t1 on t1.column1=t0.column2, t1.column3=t0.column4 AND t1.column5=?`语句
      *

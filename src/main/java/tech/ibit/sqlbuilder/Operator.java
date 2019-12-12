@@ -22,7 +22,7 @@ public enum Operator {
     IS_NOT_NULL("IS NOT NULL"),
 
     /**
-     *  相等
+     * 相等
      */
     EQUALS("="),
 

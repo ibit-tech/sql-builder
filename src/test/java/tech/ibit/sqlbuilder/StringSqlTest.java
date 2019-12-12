@@ -36,7 +36,7 @@ public class StringSqlTest extends CommonTest {
         StringSql sql = new StringSql()
                 .count()
                 .from("user")
-                .where(Collections.singletonList("user_id > ?"),  getKeyValuePairs("user_id", 100));
+                .where(Collections.singletonList("user_id > ?"), getKeyValuePairs("user_id", 100));
         assertParamsEquals("SELECT COUNT(*) FROM user WHERE user_id > ?", Arrays.asList("user_id", 100), sql.getSqlParams());
         assertParamsEquals("SELECT COUNT(*) FROM user WHERE user_id > ?", Arrays.asList("user_id", 100), sql.countSqlParams());
     }
@@ -64,7 +64,7 @@ public class StringSqlTest extends CommonTest {
         StringSql sql = new StringSql()
                 .insertInto("user")
                 .values(Arrays.asList(1, "ben@ibit.tech", "ibit_tech@aliyun.com", "12345678", "188", 1));
-        assertParamsEquals("INSERT INTO user VALUES(?, ?, ?, ?, ?, ?)", 
+        assertParamsEquals("INSERT INTO user VALUES(?, ?, ?, ?, ?, ?)",
                 Arrays.asList(null, 1, null, "ben@ibit.tech", null, "ibit_tech@aliyun.com", null, "12345678", null, "188", null, 1)
                 , sql.getSqlParams());
 

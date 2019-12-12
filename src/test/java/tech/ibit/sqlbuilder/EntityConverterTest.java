@@ -1,10 +1,18 @@
 package tech.ibit.sqlbuilder;
 
+import lombok.Data;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import tech.ibit.sqlbuilder.annotation.DbColumn;
+import tech.ibit.sqlbuilder.annotation.DbTable;
+import tech.ibit.sqlbuilder.exception.AutoIncrementIdSetterMethodNotFoundException;
+import tech.ibit.sqlbuilder.exception.NotEntityException;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -14,10 +22,13 @@ import static org.junit.Assert.assertEquals;
  * @version 1.0
  */
 public class EntityConverterTest {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Test
     public void getTableColumns() {
         TableColumnInfo entity = EntityConverter.getTableColumns(User.class);
-        assert entity != null;
         assertColumns(entity.getColumns(),
                 Arrays.asList(UserProperties.userId, UserProperties.loginId, UserProperties.email, UserProperties.password, UserProperties.mobilePhone, UserProperties.type));
         assertColumns(entity.getIds(), Collections.singletonList(UserProperties.userId));
@@ -80,7 +91,7 @@ public class EntityConverterTest {
 
 
     @Test
-    public void getTableColumnValuesList() throws Exception {
+    public void getTableColumnValuesList() {
 
         User user1 = getUser1();
         User user2 = getUser2();
@@ -133,9 +144,31 @@ public class EntityConverterTest {
     @Test
     public void getAutoIncrementIdSetterMethod() {
         AutoIncrementIdSetterMethod idSetterMethod = EntityConverter.getAutoIncrementIdSetterMethod(User.class);
-        assert null != idSetterMethod;
         assertEquals(idSetterMethod.getType(), Integer.class);
         assertEquals(idSetterMethod.getMethod().getName(), "setUserId");
+    }
+
+
+    @Test
+    public void getAutoIncrementIdSetterMethod2() {
+        thrown.expect(NotEntityException.class);
+        thrown.expectMessage("Class(java.util.HashMap) is not entity!");
+        EntityConverter.getAutoIncrementIdSetterMethod(HashMap.class);
+    }
+
+
+    @Test
+    public void getAutoIncrementIdSetterMethod3() {
+        thrown.expect(AutoIncrementIdSetterMethodNotFoundException.class);
+        thrown.expectMessage("Class(tech.ibit.sqlbuilder.EntityConverterTest$User2) auto increment setter method not found!");
+        EntityConverter.getAutoIncrementIdSetterMethod(User2.class);
+    }
+
+    @DbTable(name = "user", alias = "u")
+    @Data
+    public static class User2 {
+        @DbColumn(name = "name")
+        private String name;
     }
 
     @Test

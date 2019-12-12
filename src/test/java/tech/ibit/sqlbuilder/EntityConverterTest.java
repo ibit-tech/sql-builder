@@ -7,7 +7,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import tech.ibit.sqlbuilder.annotation.DbColumn;
 import tech.ibit.sqlbuilder.annotation.DbTable;
-import tech.ibit.sqlbuilder.exception.AutoIncrementIdSetterMethodNotFoundException;
 import tech.ibit.sqlbuilder.exception.NotEntityException;
 
 import java.util.Arrays;
@@ -159,9 +158,7 @@ public class EntityConverterTest {
 
     @Test
     public void getAutoIncrementIdSetterMethod3() {
-        thrown.expect(AutoIncrementIdSetterMethodNotFoundException.class);
-        thrown.expectMessage("Class(tech.ibit.sqlbuilder.EntityConverterTest$User2) auto increment setter method not found!");
-        EntityConverter.getAutoIncrementIdSetterMethod(User2.class);
+        Assert.assertNull(EntityConverter.getAutoIncrementIdSetterMethod(User2.class));
     }
 
     @DbTable(name = "user", alias = "u")

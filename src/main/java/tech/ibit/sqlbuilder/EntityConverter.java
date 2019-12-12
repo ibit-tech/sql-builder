@@ -4,7 +4,6 @@ import lombok.experimental.UtilityClass;
 import tech.ibit.sqlbuilder.annotation.DbColumn;
 import tech.ibit.sqlbuilder.annotation.DbId;
 import tech.ibit.sqlbuilder.annotation.DbTable;
-import tech.ibit.sqlbuilder.exception.AutoIncrementIdSetterMethodNotFoundException;
 import tech.ibit.sqlbuilder.exception.NotEntityException;
 import tech.ibit.sqlbuilder.exception.TableNotMatchedException;
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
@@ -153,8 +152,6 @@ public class EntityConverter {
     public AutoIncrementIdSetterMethod getAutoIncrementIdSetterMethod(Class poClazz) {
         checkEntityClazz(poClazz);
 
-        Class clazz = poClazz;
-
         int depth = 0;
         while (isContinue(poClazz, depth)) {
             depth++;
@@ -166,7 +163,7 @@ public class EntityConverter {
             }
             poClazz = poClazz.getSuperclass();
         }
-        throw new AutoIncrementIdSetterMethodNotFoundException(clazz.getName());
+        return null;
     }
 
     /**

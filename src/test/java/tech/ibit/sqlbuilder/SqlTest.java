@@ -547,7 +547,8 @@ public class SqlTest extends CommonTest {
                 .update(UserProperties.TABLE)
                 .increaseSet(new ColumnValue(UserProperties.loginTimes, 2))
                 .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-        assertParamsEquals("UPDATE user u SET u.login_times = u.login_times + ? WHERE u.user_id = ?", Arrays.asList("u.login_times", 2, "u.user_id", 1), sql.getSqlParams());
+        assertParamsEquals("UPDATE user u SET u.login_times = u.login_times + ? WHERE u.user_id = ?",
+                Arrays.asList("u.login_times", 2, "u.user_id", 1), sql.getSqlParams());
     }
 
 

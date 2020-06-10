@@ -6,7 +6,7 @@ import tech.ibit.sqlbuilder.annotation.DbId;
 import tech.ibit.sqlbuilder.annotation.DbTable;
 
 /**
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Data

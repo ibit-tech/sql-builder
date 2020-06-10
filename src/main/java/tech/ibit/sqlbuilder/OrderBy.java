@@ -8,7 +8,7 @@ import java.util.Collections;
 /**
  * 定义排序类
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Data
@@ -18,7 +18,7 @@ public class OrderBy implements IOrderBy {
     /**
      * 列
      */
-    private Column column;
+    private IColumn column;
 
     /**
      * 是否倒叙
@@ -30,10 +30,9 @@ public class OrderBy implements IOrderBy {
      *
      * @param column 列
      */
-    public OrderBy(Column column) {
+    public OrderBy(IColumn column) {
         this(column, false);
     }
-
 
     /**
      * 构造预查询SQL对象
@@ -42,9 +41,9 @@ public class OrderBy implements IOrderBy {
      * @return BETWEEN值预查询SQL对象
      */
     @Override
-    public PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
-        String columnName = useAlias ? column.getNameWithTableAlias() : column.getName();
+    public PrepareStatement getPrepareStatement(boolean useAlias) {
+        String columnName = getColumn().getCompareColumnName(useAlias);
         String prepareSql = columnName + (desc ? " DESC" : "");
-        return new PrepareStatement<>(prepareSql, Collections.emptyList());
+        return new PrepareStatement(prepareSql, Collections.emptyList());
     }
 }

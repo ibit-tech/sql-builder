@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * 列（带别名）
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Data

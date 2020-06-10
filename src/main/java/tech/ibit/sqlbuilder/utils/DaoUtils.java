@@ -4,7 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import tech.ibit.sqlbuilder.*;
-import tech.ibit.sqlbuilder.exception.*;
+import tech.ibit.sqlbuilder.converter.ColumnSetValue;
+import tech.ibit.sqlbuilder.converter.EntityConverter;
+import tech.ibit.sqlbuilder.converter.TableColumnInfo;
+import tech.ibit.sqlbuilder.converter.TableColumnSetValues;
+import tech.ibit.sqlbuilder.exception.SqlException;
+import tech.ibit.sqlbuilder.sql.DeleteSql;
+import tech.ibit.sqlbuilder.sql.SearchSql;
+import tech.ibit.sqlbuilder.sql.UpdateSql;
+import tech.ibit.sqlbuilder.sql.support.SetSupport;
+import tech.ibit.sqlbuilder.sql.support.WhereSupport;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -12,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * DAO工具类
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @UtilityClass
@@ -25,15 +34,15 @@ public class DaoUtils {
      * @param idValues 主键值集合
      * @param <P>      返回实体类类型
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      */
-    public <P> SqlParams getByIds(Class<P> poClazz, Collection<?> idValues) {
+    public <P> PrepareStatement getByIds(Class<P> poClazz, Collection<?> idValues) {
         if (CollectionUtils.isEmpty(idValues)) {
-            throw new IdValueNotFoundException();
+            throw SqlException.idValueNotFound();
         }
         TableColumnInfo table = getAndCheckTableIdInfo(poClazz);
         if (table.getIds().size() > 1) {
-            throw new MultiIdNotSupportedException(table.getTable().getName());
+            throw SqlException.multiIdNotSupported(table.getTable().getName());
         }
         return getById(table, idValues);
     }
@@ -45,9 +54,9 @@ public class DaoUtils {
      * @param idValue 主键值
      * @param <P>     返回实体类类型
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      */
-    public <P> SqlParams getById(Class<P> poClazz, Object idValue) {
+    public <P> PrepareStatement getById(Class<P> poClazz, Object idValue) {
         return getByIds(poClazz, null == idValue ? null : Collections.singletonList(idValue));
     }
 
@@ -58,12 +67,12 @@ public class DaoUtils {
      * @param idValues 主键值列表
      * @param <P>      返回实体类类型
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      * @see MultiId
      */
-    public <P> SqlParams getByMultiIds(Class<P> poClazz, List<? extends MultiId> idValues) {
+    public <P> PrepareStatement getByMultiIds(Class<P> poClazz, List<? extends MultiId> idValues) {
         if (CollectionUtils.isEmpty(idValues)) {
-            throw new IdValueNotFoundException();
+            throw SqlException.idValueNotFound();
         }
         TableColumnInfo tableColumnInfo = getAndCheckTableIdInfo(poClazz);
         List<Column> ids = tableColumnInfo.getIds();
@@ -73,12 +82,13 @@ public class DaoUtils {
             return getById(tableColumnInfo, getIdValues(ids.get(0), columnValuesList));
         }
 
-        Sql sql = new Sql()
-                .select(tableColumnInfo.getColumns())
+        SearchSql sql = SqlFactory
+                .createSearch()
+                .column(tableColumnInfo.getColumns())
                 .from(tableColumnInfo.getTable());
         appendWhereSql(columnValuesList, sql);
         sql.limit(idValues.size());
-        return sql.getSqlParams();
+        return sql.getPrepareStatement();
     }
 
     /**
@@ -88,10 +98,10 @@ public class DaoUtils {
      * @param idValue 主键值
      * @param <P>     返回实体类类型
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      * @see MultiId
      */
-    public <P> SqlParams getByMultiId(Class<P> poClazz, MultiId idValue) {
+    public <P> PrepareStatement getByMultiId(Class<P> poClazz, MultiId idValue) {
         return getByMultiIds(poClazz, null == idValue ? null : Collections.singletonList(idValue));
     }
 
@@ -103,21 +113,25 @@ public class DaoUtils {
      * @param idValues 主键值列表
      * @param <P>      返回实体类类型
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      */
-    public <P> SqlParams deleteByIds(Class<P> poClazz, Collection<?> idValues) {
+    public <P> PrepareStatement deleteByIds(Class<P> poClazz, Collection<?> idValues) {
+
         if (CollectionUtils.isEmpty(idValues)) {
-            throw new IdValueNotFoundException();
+            throw SqlException.idValueNotFound();
         }
+
         TableColumnInfo tableIdInfo = getAndCheckTableIdInfo(poClazz);
         if (tableIdInfo.getIds().size() > 1) {
-            throw new MultiIdNotSupportedException(tableIdInfo.getTable().getName());
+            throw SqlException.multiIdNotSupported(tableIdInfo.getTable().getName());
         }
+
         Column id = tableIdInfo.getIds().get(0);
-        return new Sql()
+        return SqlFactory
+                .createDelete()
                 .deleteFrom(tableIdInfo.getTable())
-                .andWhere(CriteriaItemMaker.in(id, idValues))
-                .getSqlParams();
+                .andWhere(id.in(idValues))
+                .getPrepareStatement();
     }
 
     /**
@@ -127,9 +141,9 @@ public class DaoUtils {
      * @param idValue 主键值
      * @param <P>     返回实体类类型
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      */
-    public <P> SqlParams deleteById(Class<P> poClazz, Object idValue) {
+    public <P> PrepareStatement deleteById(Class<P> poClazz, Object idValue) {
         return deleteByIds(poClazz, null == idValue ? null : Collections.singletonList(idValue));
     }
 
@@ -138,12 +152,12 @@ public class DaoUtils {
      *
      * @param idValues 主键对象列表
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      * @see MultiId
      */
-    public SqlParams deleteByMultiIds(List<? extends MultiId> idValues) {
+    public PrepareStatement deleteByMultiIds(List<? extends MultiId> idValues) {
         if (CollectionUtils.isEmpty(idValues)) {
-            throw new IdValueNotFoundException();
+            throw SqlException.idValueNotFound();
         }
         List<TableColumnSetValues> idValueList = EntityConverter.getTableColumnValuesList(
                 new ArrayList<>(idValues), true);
@@ -152,24 +166,26 @@ public class DaoUtils {
         //没有主键
         if (firstIdValues.getColumnValues().isEmpty()) {
 
-            throw new IdNotFoundException(firstIdValues.getTable().getName());
+            throw SqlException.idNotFound(firstIdValues.getTable().getName());
 
         } else if (1 == firstIdValues.getColumnValues().size()) {
             //single id
 
-            Column id = firstIdValues.getColumnValues().get(0).getColumn();
+            Column id = (Column) firstIdValues.getColumnValues().get(0).getColumn();
             List<Object> actualIdValues = getIdValues(idValueList);
 
-            return new Sql()
+            return SqlFactory
+                    .createDelete()
                     .deleteFrom(firstIdValues.getTable())
-                    .andWhere(CriteriaItemMaker.in(id, actualIdValues))
-                    .getSqlParams();
+                    .andWhere(id.in(actualIdValues))
+                    .getPrepareStatement();
         }
 
-        Sql sql = new Sql()
+        DeleteSql sql = SqlFactory
+                .createDelete()
                 .deleteFrom(firstIdValues.getTable());
         appendWhereSql(idValueList, sql);
-        return sql.getSqlParams();
+        return sql.getPrepareStatement();
     }
 
 
@@ -178,10 +194,10 @@ public class DaoUtils {
      *
      * @param idValue 主键对象
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      * @see MultiId
      */
-    public SqlParams deleteByMultiId(MultiId idValue) {
+    public PrepareStatement deleteByMultiId(MultiId idValue) {
         return deleteByMultiIds(null == idValue ? null : Collections.singletonList(idValue));
     }
 
@@ -191,24 +207,27 @@ public class DaoUtils {
      *
      * @param po 插入对象
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      */
-    public SqlParams insertInto(Object po) {
+    public PrepareStatement insertInto(Object po) {
 
         // 逻辑，1）只插入非null字段，2）如果字段不允许为null，值为null报错，3）id不允许为null
         TableColumnSetValues entity = EntityConverter.getTableColumnValues(po, true);
         if (entity.getColumnValues().isEmpty()) {
-            throw new ColumnValueNotFoundException();
+            throw SqlException.columnValueNotFound();
         }
         List<ColumnSetValue> columnValues2Insert = getFilterColumnSetValues(entity.getColumnValues());
         if (columnValues2Insert.isEmpty()) {
-            throw new ColumnValueNotFoundException();
+            throw SqlException.columnValueNotFound();
         }
-        return new Sql()
-                .insertInto(entity.getTable())
+
+        return SqlFactory
+                .createInsert()
+                .insert(entity.getTable())
                 .values(columnValues2Insert)
-                .getSqlParams();
+                .getPrepareStatement();
     }
+
 
     /**
      * 获取过滤的是指值
@@ -220,18 +239,18 @@ public class DaoUtils {
 
         List<ColumnSetValue> columnValues2Insert = new ArrayList<>();
         columnSetValues.forEach(columnSetValue -> {
-            Column column = columnSetValue.getColumn();
+            Column column = (Column) columnSetValue.getColumn();
             Object value = columnSetValue.getValue();
             if (null != value) {
                 // 子增长的id不能设置
                 if (columnSetValue.isAutoIncrease()) {
-                    throw new IdAutoIncreaseException(column.getTable().getName(), column.getName());
+                    throw SqlException.idAutoIncrease(column.getTable().getName(), column.getName());
                 }
                 columnValues2Insert.add(columnSetValue);
             } else {
                 // 需要判断值是否可以为null
                 if (isColumnNotNullable(columnSetValue)) {
-                    throw new ColumnNullPointerException(column.getTable().getName(), column.getName());
+                    throw SqlException.columnNullPointer(column.getTable().getName(), column.getName());
                 }
             }
         });
@@ -248,6 +267,7 @@ public class DaoUtils {
         return !columnSetValue.isAutoIncrease() && !columnSetValue.isNullable();
     }
 
+
     /**
      * 构造批量插入对象的SQL对象参数
      * SQL语法 : `INSERT INTO table(column1, column2, ...) values(?, ?, ...), (?, ?, ...)`
@@ -255,14 +275,15 @@ public class DaoUtils {
      * @param pos     返回实体类列表
      * @param columns 需要插入列
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      */
-    public SqlParams batchInsertInto(List<?> pos, List<Column> columns) {
+    public PrepareStatement batchInsertInto(List<?> pos, List<Column> columns) {
         BatchInsertItems batchInsertItems = getBatchInsertItems(pos, columns);
-        return new Sql()
-                .batchInsertInto(batchInsertItems.getTable())
+        return SqlFactory
+                .createInsert()
+                .insert(batchInsertItems.getTable())
                 .values(batchInsertItems.getColumns(), batchInsertItems.getValues())
-                .getSqlParams();
+                .getPrepareStatement();
     }
 
     /**
@@ -270,9 +291,9 @@ public class DaoUtils {
      *
      * @param updateObject 更新对象
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      */
-    public SqlParams updateById(Object updateObject) {
+    public PrepareStatement updateById(Object updateObject) {
         return updateById(updateObject, null);
     }
 
@@ -282,13 +303,13 @@ public class DaoUtils {
      * @param updateObject  更新对象
      * @param updateColumns 指定更新字段
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      */
-    public SqlParams updateById(Object updateObject, List<Column> updateColumns) {
+    public PrepareStatement updateById(Object updateObject, List<Column> updateColumns) {
         TableColumnInfo idEntity = getAndCheckTableIdInfo(updateObject.getClass());
         if (null != updateColumns) {
             if (updateColumns.isEmpty()) {
-                throw new ColumnValueNotFoundException();
+                throw SqlException.columnValueNotFound();
             }
             Set<Column> updateColumnSet = new LinkedHashSet<>(updateColumns);
             updateColumnSet.addAll(idEntity.getIds());
@@ -301,24 +322,26 @@ public class DaoUtils {
         //检查主键是否为空
         checkIdNotNull(idEntity.getIds(), tableColumnValues.getColumnValues());
 
-        Sql sql = new Sql()
+        UpdateSql sql = SqlFactory
+                .createUpdate()
                 .update(idEntity.getTable());
+
         for (ColumnSetValue cv : tableColumnValues.getColumnValues()) {
-            Column column = cv.getColumn();
+            Column column = (Column) cv.getColumn();
             Object value = cv.getValue();
             if (cv.isId()) {
                 if (null == value) {
-                    throw new IdNullPointerException(idEntity.getTable().getName(), column.getName());
+                    throw SqlException.idNullPointer(idEntity.getTable().getName(), column.getName());
                 }
-                sql.andWhere(CriteriaItemMaker.equalsTo(column, value));
+                sql.andWhere(column.eq(value));
             } else {
                 if (!cv.isNullable() && null == value) {
-                    throw new ColumnNullPointerException(idEntity.getTable().getName(), column.getName());
+                    throw SqlException.columnNullPointer(idEntity.getTable().getName(), column.getName());
                 }
-                sql.set(cv);
+                sql.set(column.set(value));
             }
         }
-        return sql.getSqlParams();
+        return sql.getPrepareStatement();
     }
 
 
@@ -328,9 +351,9 @@ public class DaoUtils {
      * @param updateObject 更新对象
      * @param idValues     主键值列表
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      */
-    public SqlParams updateByIds(Object updateObject, Collection<?> idValues) {
+    public PrepareStatement updateByIds(Object updateObject, Collection<?> idValues) {
         return updateByIds(updateObject, null, idValues);
     }
 
@@ -341,15 +364,15 @@ public class DaoUtils {
      * @param idValues      主键值列表
      * @param updateColumns 指定更新列
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      */
-    public SqlParams updateByIds(Object updateObject, List<Column> updateColumns, Collection<?> idValues) {
+    public PrepareStatement updateByIds(Object updateObject, List<Column> updateColumns, Collection<?> idValues) {
         if (CollectionUtils.isEmpty(idValues)) {
-            throw new IdValueNotFoundException();
+            throw SqlException.idValueNotFound();
         }
         TableColumnInfo idEntity = getAndCheckTableIdInfo(updateObject.getClass());
         if (idEntity.getIds().size() > 1) {
-            throw new MultiIdNotSupportedException(idEntity.getTable().getName());
+            throw SqlException.multiIdNotSupported(idEntity.getTable().getName());
         }
 
         TableColumnSetValues tableColumnValues = null == updateColumns
@@ -357,11 +380,12 @@ public class DaoUtils {
                 : EntityConverter.getTableColumnValues(updateObject, updateColumns);
 
         Table table = idEntity.getTable();
-        Sql sql = new Sql()
+        UpdateSql sql = SqlFactory
+                .createUpdate()
                 .update(table);
         addSetsSql(table, tableColumnValues, sql);
-        sql.andWhere(CriteriaItemMaker.in(idEntity.getIds().get(0), idValues));
-        return sql.getSqlParams();
+        sql.andWhere(idEntity.getIds().get(0).in(idValues));
+        return sql.getPrepareStatement();
     }
 
     /**
@@ -370,10 +394,10 @@ public class DaoUtils {
      * @param updateObject 更新对象
      * @param idValues     主键对象列表
      * @return SQL参数对象
-     * @see SqlParams
+     * @see PrepareStatement
      * @see MultiId
      */
-    public SqlParams updateByMultiIds(Object updateObject, List<? extends MultiId> idValues) {
+    public PrepareStatement updateByMultiIds(Object updateObject, List<? extends MultiId> idValues) {
         return updateByMultiIds(updateObject, null, idValues);
     }
 
@@ -385,12 +409,12 @@ public class DaoUtils {
      * @param idValues      主键值列表
      * @param updateColumns 指定更新列
      * @return Update相关SQLParams
-     * @see SqlParams
+     * @see PrepareStatement
      * @see MultiId
      */
-    public SqlParams updateByMultiIds(Object updateObject, List<Column> updateColumns, List<? extends MultiId> idValues) {
+    public PrepareStatement updateByMultiIds(Object updateObject, List<Column> updateColumns, List<? extends MultiId> idValues) {
         if (CollectionUtils.isEmpty(idValues)) {
-            throw new IdValueNotFoundException();
+            throw SqlException.idValueNotFound();
         }
         List<TableColumnSetValues> idValueList = EntityConverter.getTableColumnValuesList(
                 new ArrayList<>(idValues), true);
@@ -398,24 +422,26 @@ public class DaoUtils {
 
         Table table = firstIdValues.getTable();
         if (firstIdValues.getColumnValues().isEmpty()) {
-            throw new IdNotFoundException(table.getName());
+            throw SqlException.idNotFound(table.getName());
         }
 
         TableColumnSetValues tableColumnValues = null == updateColumns
                 ? EntityConverter.getTableColumnValues(updateObject, false)
                 : EntityConverter.getTableColumnValues(updateObject, updateColumns);
 
-        Sql sql = new Sql()
+        UpdateSql sql = SqlFactory
+                .createUpdate()
                 .update(table);
         addSetsSql(table, tableColumnValues, sql);
+
         //只有一个id
         if (1 == firstIdValues.getColumnValues().size()) {
-            Column id = firstIdValues.getColumnValues().get(0).getColumn();
-            sql.andWhere(CriteriaItemMaker.in(id, getIdValues(idValueList)));
+            Column id = (Column) firstIdValues.getColumnValues().get(0).getColumn();
+            sql.andWhere(id.in(getIdValues(idValueList)));
         } else {
             appendWhereSql(idValueList, sql);
         }
-        return sql.getSqlParams();
+        return sql.getPrepareStatement();
     }
 
     /**
@@ -435,7 +461,7 @@ public class DaoUtils {
         });
         for (Column id : ids) {
             if (null == idValueMap.get(id.getNameWithTableAlias())) {
-                throw new IdNullPointerException(id.getTable().getName(), id.getName());
+                throw SqlException.idNullPointer(id.getTable().getName(), id.getName());
             }
         }
     }
@@ -447,18 +473,18 @@ public class DaoUtils {
      * @param tableColumnValues 表列-值信息
      * @param sql               SQL对象
      */
-    private void addSetsSql(Table table, TableColumnSetValues tableColumnValues, Sql sql) {
+    private void addSetsSql(Table table, TableColumnSetValues tableColumnValues, SetSupport sql) {
         for (ColumnSetValue cv : tableColumnValues.getColumnValues()) {
-            Column column = cv.getColumn();
+            Column column = (Column) cv.getColumn();
             Object value = cv.getValue();
             //id不能更新
             if (cv.isId()) {
-                throw new IdInvalidUpdateException(table.getName(), column.getName());
+                throw SqlException.idInvalidUpdate(table.getName(), column.getName());
             } else {
                 if (!cv.isNullable() && null == value) {
-                    throw new ColumnNullPointerException(table.getName(), column.getName());
+                    throw SqlException.columnNullPointer(table.getName(), column.getName());
                 }
-                sql.set(cv);
+                sql.set(column.set(value));
             }
         }
     }
@@ -469,17 +495,18 @@ public class DaoUtils {
      *
      * @param table    表
      * @param idValues 主键值列表
-     * @return
+     * @return 预查询sql
      */
-    private SqlParams getById(TableColumnInfo table, Collection<?> idValues) {
+    private PrepareStatement getById(TableColumnInfo table, Collection<?> idValues) {
         Column id = table.getIds().get(0);
-        return new Sql()
-                .select(table.getColumns())
+        return SqlFactory
+                .createSearch()
+                .column(table.getColumns())
                 .from(table.getTable())
-                .andWhere(CriteriaItemMaker.in(id, idValues))
-                .limit(idValues.size()).getSqlParams();
+                .andWhere(id.in(idValues))
+                .limit(idValues.size())
+                .getPrepareStatement();
     }
-
 
     /**
      * 获取单个主建值列表
@@ -521,15 +548,15 @@ public class DaoUtils {
      * @param columnValuesList 列-值列表
      * @param sql              Sql对象
      */
-    private void appendWhereSql(List<TableColumnSetValues> columnValuesList, Sql sql) {
+    private void appendWhereSql(List<TableColumnSetValues> columnValuesList, WhereSupport sql) {
         for (TableColumnSetValues columnValues : columnValuesList) {
             List<ColumnSetValue> cvs = columnValues.getColumnValues();
             if (CollectionUtils.isNotEmpty(cvs)) {
                 List<CriteriaItem> items = cvs.stream()
                         .filter(Objects::nonNull)
                         .map(cv -> null == cv.getValue()
-                                ? CriteriaItemMaker.isNull(cv.getColumn())
-                                : CriteriaItemMaker.equalsTo(cv.getColumn(), cv.getValue()))
+                                ? ((Column) cv.getColumn()).isNull()
+                                : ((Column) cv.getColumn()).eq(cv.getValue()))
                         .collect(Collectors.toList());
                 sql.orWhere(Criteria.ands(items));
             }
@@ -546,7 +573,7 @@ public class DaoUtils {
     private <P> TableColumnInfo getAndCheckTableIdInfo(Class<P> poClazz) {
         TableColumnInfo table = EntityConverter.getTableColumns(poClazz);
         if (CollectionUtils.isEmpty(table.getIds())) {
-            throw new IdNotFoundException(table.getTable().getName());
+            throw SqlException.idNotFound(table.getTable().getName());
         }
         return table;
     }
@@ -560,7 +587,7 @@ public class DaoUtils {
      */
     private BatchInsertItems getBatchInsertItems(List<?> objs, List<Column> columns) {
         if (CollectionUtils.isEmpty(columns)) {
-            throw new ColumnValueNotFoundException();
+            throw SqlException.columnValueNotFound();
         }
 
         Set<String> filterColumnSet = columns.stream()
@@ -574,7 +601,7 @@ public class DaoUtils {
                 table = entity.getTable();
             } else {
                 if (!table.equals(entity.getTable())) {
-                    throw new TableNotMatchedException(table.getName(), entity.getTable().getName());
+                    throw SqlException.tableNotMatched(table.getName(), entity.getTable().getName());
                 }
             }
             List<ColumnSetValue> columnValues2Insert = getFilterColumnSetValues(entity.getColumnValues(), filterColumnSet);
@@ -596,7 +623,7 @@ public class DaoUtils {
 
         columnSetValues.forEach(columnSetValue -> {
 
-            Column column = columnSetValue.getColumn();
+            Column column = (Column) columnSetValue.getColumn();
             String columnNameWithTableAlias = column.getNameWithTableAlias();
             Object value = columnSetValue.getValue();
 
@@ -604,18 +631,18 @@ public class DaoUtils {
             if (filterColumnSet.contains(columnNameWithTableAlias)) {
                 if (null != value) {
                     if (columnSetValue.isAutoIncrease()) {
-                        throw new IdAutoIncreaseException(column.getTable().getName(), column.getName());
+                        throw SqlException.idAutoIncrease(column.getTable().getName(), column.getName());
                     }
                 } else {
                     if (isColumnNotNullable(columnSetValue)) {
-                        throw new ColumnNullPointerException(column.getTable().getName(), column.getName());
+                        throw SqlException.columnNullPointer(column.getTable().getName(), column.getName());
                     }
                 }
                 columnSetValueMap.put(columnNameWithTableAlias, columnSetValue);
             } else {
                 // 字段不存在
                 if (isColumnNotNullable(columnSetValue)) {
-                    throw new ColumnNullPointerException(column.getTable().getName(), column.getName());
+                    throw SqlException.columnNullPointer(column.getTable().getName(), column.getName());
                 }
             }
         });
@@ -624,6 +651,7 @@ public class DaoUtils {
         filterColumnSet.forEach(column -> columnValues2Insert.add(columnSetValueMap.get(column)));
         return columnValues2Insert;
     }
+
 
     /**
      * 批量插入对象

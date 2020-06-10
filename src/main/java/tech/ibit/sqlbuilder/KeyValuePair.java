@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * 键-值对
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Data

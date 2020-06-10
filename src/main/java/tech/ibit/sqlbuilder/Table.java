@@ -2,11 +2,12 @@ package tech.ibit.sqlbuilder;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * 表对象定义
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Data
@@ -31,6 +32,26 @@ public class Table {
      */
     public String getNameWithAlias() {
         return name + " " + alias;
+    }
+
+    /**
+     * 获取表名
+     *
+     * @param useAlias 是否使用别名
+     * @return 表名
+     */
+    public String getTableName(boolean useAlias) {
+        return useAlias ? getNameWithAlias() : getName();
+    }
+
+    /**
+     * 获取查询名称
+     *
+     * @param userAlias 是否使用别名
+     * @return 名称
+     */
+    public String getSelectTableName(boolean userAlias) {
+        return (!userAlias || StringUtils.isBlank(alias)) ? getName() : getAlias();
     }
 
 

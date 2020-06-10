@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 /**
  * 自定义排序
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Data
@@ -26,7 +26,7 @@ public class CustomOrderBy extends OrderBy {
      * @param column    排序列
      * @param subOrders 排序序列
      */
-    public CustomOrderBy(Column column, List<?> subOrders) {
+    public CustomOrderBy(IColumn column, List<?> subOrders) {
         this(column, subOrders, false);
     }
 
@@ -37,7 +37,7 @@ public class CustomOrderBy extends OrderBy {
      * @param subOrders 排序序列
      * @param desc      是否倒叙
      */
-    public CustomOrderBy(Column column, List<?> subOrders, boolean desc) {
+    public CustomOrderBy(IColumn column, List<?> subOrders, boolean desc) {
         super(column, desc);
         this.subOrders = subOrders;
     }
@@ -49,13 +49,13 @@ public class CustomOrderBy extends OrderBy {
      * @return BETWEEN值预查询SQL对象
      */
     @Override
-    public PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
+    public PrepareStatement getPrepareStatement(boolean useAlias) {
         if (CollectionUtils.isEmpty(subOrders)) {
             return null;
         }
-        String columnName = useAlias ? getColumn().getNameWithTableAlias() : getColumn().getName();
+        String columnName = getColumn().getCompareColumnName(useAlias);
         String prepareSql = "FIELD(" + columnName + ", " + CriteriaMaker.getIn(subOrders.size()) + ")" + (isDesc() ? " DESC" : "");
-        List<KeyValuePair> subOrderKeyValuePairs = subOrders.stream().map(o -> new KeyValuePair(columnName, o)).collect(Collectors.toList());
-        return new PrepareStatement<>(prepareSql, subOrderKeyValuePairs);
+        List<ColumnValue> subOrderKeyValuePairs = subOrders.stream().map(o -> new ColumnValue(getColumn(), o)).collect(Collectors.toList());
+        return new PrepareStatement(prepareSql, subOrderKeyValuePairs);
     }
 }

@@ -3,7 +3,7 @@ package tech.ibit.sqlbuilder;
 /**
  * 条件内容字串创建类
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 public class CriteriaMaker {
@@ -38,7 +38,7 @@ public class CriteriaMaker {
      * @param column 列
      * @return 条件内容字串
      */
-    public static String equalsTo(String column) {
+    public static String eq(String column) {
         return column + " = ?";
     }
 
@@ -49,7 +49,7 @@ public class CriteriaMaker {
      * @param secondColumn 第二列
      * @return 条件内容字串
      */
-    public static String equalsTo(String column, String secondColumn) {
+    public static String eq(String column, String secondColumn) {
         return column + " = " + secondColumn;
     }
 
@@ -59,7 +59,7 @@ public class CriteriaMaker {
      * @param column 列
      * @return 条件内容字串
      */
-    public static String notEqualsTo(String column) {
+    public static String neq(String column) {
         return column + " <> ?";
     }
 
@@ -70,7 +70,7 @@ public class CriteriaMaker {
      * @param secondColumn 第二列
      * @return 条件内容字串
      */
-    public static String notEqualsTo(String column, String secondColumn) {
+    public static String neq(String column, String secondColumn) {
         return column + " <> " + secondColumn;
     }
 
@@ -80,7 +80,7 @@ public class CriteriaMaker {
      * @param column 列
      * @return 条件内容字串
      */
-    public static String greaterThan(String column) {
+    public static String gt(String column) {
         return column + " > ?";
     }
 
@@ -91,7 +91,7 @@ public class CriteriaMaker {
      * @param secondColumn 第二列
      * @return 条件内容字串
      */
-    public static String greaterThan(String column, String secondColumn) {
+    public static String gt(String column, String secondColumn) {
         return column + " > " + secondColumn;
     }
 
@@ -101,7 +101,7 @@ public class CriteriaMaker {
      * @param column 列
      * @return 条件内容字串
      */
-    public static String greaterThanOrEqualsTo(String column) {
+    public static String egt(String column) {
         return column + " >= ?";
     }
 
@@ -112,7 +112,7 @@ public class CriteriaMaker {
      * @param secondColumn 第二列
      * @return 条件内容字串
      */
-    public static String greaterThanOrEqualsTo(Column column, Column secondColumn) {
+    public static String egt(Column column, Column secondColumn) {
         return column + " >= " + secondColumn;
     }
 
@@ -122,7 +122,7 @@ public class CriteriaMaker {
      * @param column 列
      * @return 条件内容字串
      */
-    public static String lessThan(String column) {
+    public static String lt(String column) {
         return column + "< ?";
     }
 
@@ -133,7 +133,7 @@ public class CriteriaMaker {
      * @param secondColumn 第二列
      * @return 条件内容字串
      */
-    public static String lessThan(String column, String secondColumn) {
+    public static String lt(String column, String secondColumn) {
         return column + " < " + secondColumn;
     }
 
@@ -143,7 +143,7 @@ public class CriteriaMaker {
      * @param column 列
      * @return 条件内容字串
      */
-    public static String lessThanOrEqualTo(String column) {
+    public static String elt(String column) {
         return column + " <= ?";
     }
 
@@ -154,7 +154,7 @@ public class CriteriaMaker {
      * @param secondColumn 第二列
      * @return 条件内容字串
      */
-    public static String lessThanOrEqualTo(String column, String secondColumn) {
+    public static String elt(String column, String secondColumn) {
         return column + " <= " + secondColumn;
     }
 
@@ -244,7 +244,7 @@ public class CriteriaMaker {
      * @param column 列
      * @return 标记位条件内容
      */
-    public String containsAllFlags(String column) {
+    public String allFlgs(String column) {
         return column + " & ? = " + column;
     }
 
@@ -255,7 +255,7 @@ public class CriteriaMaker {
      * @param column 列
      * @return 标记位条件内容
      */
-    public String containsNoneFlags(String column) {
+    public String noFlgs(String column) {
         return column + "& ? = 0";
     }
 
@@ -265,7 +265,7 @@ public class CriteriaMaker {
      * @param column 列
      * @return 标记位条件内容
      */
-    public String containsAnyFlags(String column) {
+    public String anyFlgs(String column) {
         return column + " & ? <> 0";
     }
 }

@@ -3,16 +3,22 @@ package tech.ibit.sqlbuilder;
 /**
  * 定义OrderBy接口
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
-public interface IOrderBy {
+public interface IOrderBy extends PrepareStatementSupplier {
 
     /**
-     * 构造预查询SQL对象
+     * 获取列
      *
-     * @param useAlias 是否使用别名
-     * @return BETWEEN值预查询SQL对象
+     * @return 列
      */
-    PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias);
+    IColumn getColumn();
+
+    /**
+     * 定义是否倒序
+     *
+     * @return 是否倒序
+     */
+    boolean isDesc();
 }

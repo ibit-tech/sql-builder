@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 public class CriteriaTest {
@@ -21,14 +21,14 @@ public class CriteriaTest {
     public void createANDs() {
 
         List<Criteria> subCriterion = Arrays.asList(
-                Criteria.or(CriteriaItemMaker.equalsTo(UserProperties.userId, 1)),
-                Criteria.or(CriteriaItemMaker.like(UserProperties.name, "小%")));
-        List<Criteria> ands = Criteria.ands(Arrays.asList(subCriterion, CriteriaItemMaker.equalsTo(UserProperties.type, 1)));
+                Criteria.or(UserProperties.userId.eq(1)),
+                Criteria.or(UserProperties.name.like("小%")));
+        List<Criteria> ands = Criteria.ands(Arrays.asList(subCriterion, UserProperties.type.eq(1)));
         Assert.assertEquals(ands.size(), 2);
 
         thrown.expect(ClassCastException.class);
         thrown.expectMessage("java.lang.Integer cannot be cast to java.util.List");
-        Criteria.ands(Arrays.asList(subCriterion, CriteriaItemMaker.equalsTo(UserProperties.type, 1), 3));
+        Criteria.ands(Arrays.asList(subCriterion, UserProperties.type.eq(1), 3));
     }
 
 }

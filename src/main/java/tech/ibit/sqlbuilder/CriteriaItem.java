@@ -1,7 +1,10 @@
 package tech.ibit.sqlbuilder;
 
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import tech.ibit.sqlbuilder.enums.CriteriaItemValueTypeEnum;
+import tech.ibit.sqlbuilder.enums.OperatorEnum;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,26 +15,27 @@ import java.util.stream.Collectors;
 /**
  * 条件内容对象
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Getter
-public class CriteriaItem {
+@AllArgsConstructor
+public class CriteriaItem implements PrepareStatementSupplier {
 
     /**
      * 第一列
      */
-    private Column column;
-
-    /**
-     * 第二列
-     */
-    private Column secondColumn;
+    private IColumn column;
 
     /**
      * 操作符
      */
-    private Operator operator;
+    private OperatorEnum operator;
+
+    /**
+     * 第二列
+     */
+    private IColumn secondColumn;
 
     /**
      * 第一个值
@@ -46,69 +50,57 @@ public class CriteriaItem {
     /**
      * 值类型
      */
-    private ValueType valueType;
-
+    private CriteriaItemValueTypeEnum valueType;
 
     /**
-     * 构造函数（无值）
+     * 构造无值条件
      *
      * @param column   列
      * @param operator 操作符
      * @return 条件内容
      */
-    CriteriaItem(Column column, Operator operator) {
-        this.column = column;
-        this.operator = operator;
-        valueType = ValueType.NO_VALUE;
+    public static CriteriaItem getNoValueInstance(IColumn column, OperatorEnum operator) {
+        return new CriteriaItem(column, operator, null, null, null, CriteriaItemValueTypeEnum.NO_VALUE);
     }
 
     /**
-     * 构造函数（两列比较实例）
+     * 构造两列比较条件
      *
      * @param column       第一列
      * @param operator     操作符
      * @param secondColumn 第二列
      * @return 条件内容
      */
-    CriteriaItem(Column column, Operator operator, Column secondColumn) {
-        this.column = column;
-        this.operator = operator;
-        this.secondColumn = secondColumn;
-        valueType = ValueType.COLUMN_COMPARE;
+    public static CriteriaItem getColumnCompareInstance(IColumn column, OperatorEnum operator, IColumn secondColumn) {
+        return new CriteriaItem(column, operator, secondColumn, null, null, CriteriaItemValueTypeEnum.COLUMN_COMPARE);
     }
 
     /**
-     * 构造函数（列-值）
+     * 构造单值条件
      *
      * @param column   列
      * @param operator 操作符
      * @param value    值
      * @return 条件内容
      */
-    CriteriaItem(Column column, Operator operator, Object value) {
-        this.column = column;
-        this.operator = operator;
-        this.value = value;
-        valueType = ValueType.SINGLE_VALUE;
+    public static CriteriaItem getSingleValueInstance(IColumn column, OperatorEnum operator, Object value) {
+        return new CriteriaItem(column, operator, null, value, null, CriteriaItemValueTypeEnum.SINGLE_VALUE);
     }
 
     /**
-     * 构造函数（列-列表）
+     * 构造多值条件
      *
      * @param column   列
      * @param operator 操作符
      * @param values   值列表
      * @return 条件内容
      */
-    CriteriaItem(Column column, Operator operator, Collection<?> values) {
-        this.column = column;
-        this.operator = operator;
-        this.value = values;
-        valueType = ValueType.LIST_VALUE;
+    public static CriteriaItem getMultiValueInstance(IColumn column, OperatorEnum operator, Collection<?> values) {
+        return new CriteriaItem(column, operator, null, values, null, CriteriaItemValueTypeEnum.LIST_VALUE);
     }
 
     /**
-     * 构造函数（BETWEEN）
+     * 构造between条件
      *
      * @param column      列
      * @param operator    操作符
@@ -116,21 +108,8 @@ public class CriteriaItem {
      * @param secondValue 第二个值
      * @return 条件内容
      */
-    CriteriaItem(Column column, Operator operator, Object value, Object secondValue) {
-        this.column = column;
-        this.operator = operator;
-        this.value = value;
-        this.secondValue = secondValue;
-        valueType = ValueType.BETWEEN_VALUE;
-    }
-
-    /**
-     * 获取预查询SQL对象
-     *
-     * @return 预查询SQL对象
-     */
-    PrepareStatement getPrepareStatement() {
-        return getPrepareStatement(false);
+    public static CriteriaItem getBetweenInstance(IColumn column, OperatorEnum operator, Object value, Object secondValue) {
+        return new CriteriaItem(column, operator, null, value, secondValue, CriteriaItemValueTypeEnum.BETWEEN_VALUE);
     }
 
     /**
@@ -139,7 +118,8 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return 预查询SQL对象
      */
-    PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
+    @Override
+    public PrepareStatement getPrepareStatement(boolean useAlias) {
         switch (valueType) {
             case COLUMN_COMPARE:
                 return getColumnsComparePrepareStatement(useAlias);
@@ -157,14 +137,32 @@ public class CriteriaItem {
     }
 
     /**
+     * 生成or条件
+     *
+     * @return or条件
+     */
+    public Criteria or() {
+        return Criteria.or(this);
+    }
+
+    /**
+     * 生成and条件
+     *
+     * @return and条件
+     */
+    public Criteria and() {
+        return Criteria.and(this);
+    }
+
+    /**
      * 构造两列比较预查询SQL对象
      *
      * @param useAlias 是否使用别名
      * @return 两列比较预查询SQL对象
      */
-    private PrepareStatement<KeyValuePair> getColumnsComparePrepareStatement(boolean useAlias) {
-        String sql = getColumnName(column, useAlias) + " " + operator.getValue() + " " + getColumnName(secondColumn, useAlias);
-        return new PrepareStatement<>(sql, Collections.emptyList());
+    private PrepareStatement getColumnsComparePrepareStatement(boolean useAlias) {
+        String sql = column.getCompareColumnName(useAlias) + " " + operator.getValue() + " " + secondColumn.getCompareColumnName(useAlias);
+        return new PrepareStatement(sql, Collections.emptyList());
     }
 
     /**
@@ -173,9 +171,9 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return 无值预查询SQL对象
      */
-    private PrepareStatement<KeyValuePair> getNoValuePrepareStatement(boolean useAlias) {
-        String sql = getColumnName(column, useAlias) + " " + operator.getValue();
-        return new PrepareStatement<>(sql, Collections.emptyList());
+    private PrepareStatement getNoValuePrepareStatement(boolean useAlias) {
+        String sql = column.getCompareColumnName(useAlias) + " " + operator.getValue();
+        return new PrepareStatement(sql, Collections.emptyList());
     }
 
     /**
@@ -184,10 +182,9 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return 单值预查询SQL对象
      */
-    private PrepareStatement<KeyValuePair> getSingleValuePrepareStatement(boolean useAlias) {
-        String columnName = getColumnName(column, useAlias);
-        String sql = columnName + " " + operator.getValue() + " ?";
-        return new PrepareStatement<>(sql, Collections.singletonList(new KeyValuePair(columnName, value)));
+    private PrepareStatement getSingleValuePrepareStatement(boolean useAlias) {
+        String sql = column.getCompareColumnName(useAlias) + " " + operator.getValue() + " ?";
+        return new PrepareStatement(sql, Collections.singletonList(new ColumnValue(column, value)));
     }
 
     /**
@@ -196,10 +193,9 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return BETWEEN值预查询SQL对象
      */
-    private PrepareStatement<KeyValuePair> getBetweenPrepareStatement(boolean useAlias) {
-        String columnName = getColumnName(column, useAlias);
-        String sql = columnName + " " + operator.getValue() + " ? " + operator.getSecondValue() + " ?";
-        return new PrepareStatement<>(sql, Arrays.asList(new KeyValuePair(columnName, value), new KeyValuePair(columnName, secondValue)));
+    private PrepareStatement getBetweenPrepareStatement(boolean useAlias) {
+        String sql = column.getCompareColumnName(useAlias) + " " + operator.getValue() + " ? " + operator.getSecondValue() + " ?";
+        return new PrepareStatement(sql, Arrays.asList(new ColumnValue(column, value), new ColumnValue(column, secondValue)));
     }
 
     /**
@@ -208,55 +204,11 @@ public class CriteriaItem {
      * @param useAlias 是否使用别名
      * @return 列表值预查询SQL对象
      */
-    private PrepareStatement<KeyValuePair> getListPrepareStatement(boolean useAlias) {
+    private PrepareStatement getListPrepareStatement(boolean useAlias) {
         Collection<?> values = (Collection<?>) value;
-        String columnName = getColumnName(column, useAlias);
-        String sql = columnName + " " + operator.getValue() + "(" + CriteriaMaker.getIn(values.size()) + ")";
-        List<KeyValuePair> keyValuePairs = values.stream().map(v -> new KeyValuePair(columnName, v)).collect(Collectors.toList());
-        return new PrepareStatement<>(sql, keyValuePairs);
+        String sql = column.getCompareColumnName(useAlias) + " " + operator.getValue() + "(" + CriteriaMaker.getIn(values.size()) + ")";
+        List<ColumnValue> keyValuePairs = values.stream().map(v -> new ColumnValue(column, v)).collect(Collectors.toList());
+        return new PrepareStatement(sql, keyValuePairs);
     }
 
-
-    /**
-     * 获取列名
-     *
-     * @param column    列
-     * @param userAlias 是否使用别名
-     * @return 列名
-     */
-    protected String getColumnName(Column column, boolean userAlias) {
-        return userAlias ? column.getNameWithTableAlias() : column.getName();
-    }
-
-    /**
-     * 值类型
-     */
-    private enum ValueType {
-        /**
-         * 列比较
-         */
-        COLUMN_COMPARE,
-
-        /**
-         * 无值
-         */
-        NO_VALUE,
-
-        /**
-         * 单个值
-         */
-        SINGLE_VALUE,
-
-        /**
-         * BETWEEN值
-         */
-        BETWEEN_VALUE,
-
-        /**
-         * 列表值
-         */
-        LIST_VALUE,
-
-        ;
-    }
 }

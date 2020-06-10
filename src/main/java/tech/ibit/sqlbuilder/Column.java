@@ -3,17 +3,22 @@ package tech.ibit.sqlbuilder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import tech.ibit.sqlbuilder.builder.IColumnAggregateBuilder;
+import tech.ibit.sqlbuilder.builder.IColumnCriteriaItemBuilder;
+import tech.ibit.sqlbuilder.builder.IColumnOrderByBuilder;
+import tech.ibit.sqlbuilder.builder.IColumnSetItemBuilder;
 
 /**
  * 列定义
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Getter
 @Setter
 @AllArgsConstructor
-public class Column implements IColumn {
+public class Column implements IColumn,
+        IColumnCriteriaItemBuilder, IColumnAggregateBuilder, IColumnSetItemBuilder, IColumnOrderByBuilder {
 
     /**
      * 表
@@ -79,5 +84,10 @@ public class Column implements IColumn {
     public String getNameAs() {
         // 这里不定义别名
         return null;
+    }
+
+    @Override
+    public IColumn getColumn() {
+        return this;
     }
 }

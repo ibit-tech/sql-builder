@@ -3,7 +3,7 @@ package tech.ibit.sqlbuilder;
 /**
  * DbTable for sz_project
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 public interface ProjectProperties {

@@ -7,7 +7,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import tech.ibit.sqlbuilder.annotation.DbColumn;
 import tech.ibit.sqlbuilder.annotation.DbTable;
-import tech.ibit.sqlbuilder.exception.NotEntityException;
+import tech.ibit.sqlbuilder.converter.ColumnSetValue;
+import tech.ibit.sqlbuilder.converter.EntityConverter;
+import tech.ibit.sqlbuilder.converter.TableColumnInfo;
+import tech.ibit.sqlbuilder.converter.TableColumnSetValues;
+import tech.ibit.sqlbuilder.exception.SqlException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,7 +21,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 public class EntityConverterTest {
@@ -150,7 +154,7 @@ public class EntityConverterTest {
 
     @Test
     public void getAutoIncrementIdSetterMethod2() {
-        thrown.expect(NotEntityException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Class(java.util.HashMap) is not entity!");
         EntityConverter.getAutoIncrementIdSetterMethod(HashMap.class);
     }

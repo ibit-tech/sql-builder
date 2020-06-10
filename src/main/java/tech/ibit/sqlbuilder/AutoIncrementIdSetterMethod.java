@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 /**
  * 自增长id Setter相关方法
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Data

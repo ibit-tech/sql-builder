@@ -2,13 +2,14 @@ package tech.ibit.sqlbuilder;
 
 
 import lombok.Data;
+import tech.ibit.sqlbuilder.enums.CriteriaItemValueTypeEnum;
 
 import java.util.Collections;
 
 /**
  * 标记位查询条件
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Data
@@ -36,6 +37,7 @@ public class FlagCriteriaItem extends CriteriaItem {
         ;
     }
 
+
     /**
      * 是否相等
      */
@@ -49,9 +51,21 @@ public class FlagCriteriaItem extends CriteriaItem {
      * @param containsType 包含类型
      * @param value        位long值
      */
-    FlagCriteriaItem(Column column, ContainsType containsType, long value) {
-        super(column, null, value);
+    private FlagCriteriaItem(IColumn column, ContainsType containsType, long value) {
+        super(column, null, null, value, null, CriteriaItemValueTypeEnum.SINGLE_VALUE);
         this.containsType = containsType;
+    }
+
+    /**
+     * 获取实例
+     *
+     * @param column       列
+     * @param containsType 包含类型
+     * @param value        位long值
+     * @return 标记位条件
+     */
+    public static FlagCriteriaItem getInstance(IColumn column, ContainsType containsType, long value) {
+        return new FlagCriteriaItem(column, containsType, value);
     }
 
     /**
@@ -61,10 +75,10 @@ public class FlagCriteriaItem extends CriteriaItem {
      * @return 预查询SQL对象
      */
     @Override
-    PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
+    public PrepareStatement getPrepareStatement(boolean useAlias) {
 
         StringBuilder whereSql = new StringBuilder();
-        String columnName = getColumnName(getColumn(), useAlias);
+        String columnName = getColumn().getCompareColumnName(useAlias);
         switch (containsType) {
             case CONTAINS_ALL:
                 whereSql.append(columnName)
@@ -81,6 +95,6 @@ public class FlagCriteriaItem extends CriteriaItem {
                 break;
             default:
         }
-        return new PrepareStatement<>(whereSql.toString(), Collections.singletonList(new KeyValuePair(columnName, getValue())));
+        return new PrepareStatement(whereSql.toString(), Collections.singletonList(new ColumnValue(getColumn(), getValue())));
     }
 }

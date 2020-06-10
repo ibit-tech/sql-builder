@@ -1,6 +1,7 @@
 package tech.ibit.sqlbuilder;
 
 import lombok.Data;
+import tech.ibit.sqlbuilder.enums.CriteriaLogicalEnum;
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
 import java.util.ArrayList;
@@ -8,18 +9,18 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * 查询条件
+ * 查询条件（where 或 having）
  *
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 @Data
-public class Criteria {
+public class Criteria implements PrepareStatementSupplier {
 
     /**
      * 条件关系
      */
-    private CriteriaLogical logical;
+    private CriteriaLogicalEnum logical;
 
     /**
      * 条件内容
@@ -37,7 +38,7 @@ public class Criteria {
      * @param logical      条件关系
      * @param subCriterion 子条件列表
      */
-    private Criteria(CriteriaLogical logical, List<Criteria> subCriterion) {
+    private Criteria(CriteriaLogicalEnum logical, List<Criteria> subCriterion) {
         this.logical = logical;
         this.subCriterion = subCriterion;
     }
@@ -48,7 +49,7 @@ public class Criteria {
      * @param logical 条件关系
      * @param item    条件内容
      */
-    private Criteria(CriteriaLogical logical, CriteriaItem item) {
+    private Criteria(CriteriaLogicalEnum logical, CriteriaItem item) {
         this.logical = logical;
         this.item = item;
     }
@@ -60,7 +61,7 @@ public class Criteria {
      * @return OR条件
      */
     public static Criteria or(List<Criteria> subCriterion) {
-        return new Criteria(CriteriaLogical.OR, subCriterion);
+        return new Criteria(CriteriaLogicalEnum.OR, subCriterion);
     }
 
     /**
@@ -70,8 +71,29 @@ public class Criteria {
      * @return OR条件
      */
     public static Criteria or(CriteriaItem item) {
-        return new Criteria(CriteriaLogical.OR, item);
+        return new Criteria(CriteriaLogicalEnum.OR, item);
     }
+
+    /**
+     * 构造AND条件
+     *
+     * @param subCriterion 子条件
+     * @return AND条件
+     */
+    public static Criteria and(List<Criteria> subCriterion) {
+        return new Criteria(CriteriaLogicalEnum.AND, subCriterion);
+    }
+
+    /**
+     * 构造AND条件
+     *
+     * @param item 条件内容
+     * @return AND条件
+     */
+    public static Criteria and(CriteriaItem item) {
+        return new Criteria(CriteriaLogicalEnum.AND, item);
+    }
+
 
     /**
      * 构造OR条件列表
@@ -97,31 +119,12 @@ public class Criteria {
 
 
     /**
-     * 构造AND条件
-     *
-     * @param subCriterion 子条件
-     * @return AND条件
-     */
-    public static Criteria and(List<Criteria> subCriterion) {
-        return new Criteria(CriteriaLogical.AND, subCriterion);
-    }
-
-    /**
-     * 构造AND条件
-     *
-     * @param item 条件内容
-     * @return AND条件
-     */
-    public static Criteria and(CriteriaItem item) {
-        return new Criteria(CriteriaLogical.AND, item);
-    }
-
-    /**
      * 构造AND条件列表
      *
      * @param items 列表中的项目为CriteriaItem或者List&lt;Criteria&gt;
      * @return AND条件列表
      */
+    @SuppressWarnings("unchecked")
     public static List<Criteria> ands(List items) {
         if (null == items || items.isEmpty()) {
             return Collections.emptyList();
@@ -143,47 +146,50 @@ public class Criteria {
      * @param useAlias 是否使用别名
      * @return 预查询SQL对象
      */
-    public PrepareStatement<KeyValuePair> getPrepareStatement(boolean useAlias) {
+    @Override
+    public PrepareStatement getPrepareStatement(boolean useAlias) {
         if (null == item && CollectionUtils.isEmpty(subCriterion)) {
             return null;
         }
         StringBuilder whereSql = new StringBuilder();
-        List<KeyValuePair> whereParams = new ArrayList<>();
-        appendWhere(this, whereSql, whereParams, useAlias);
-        return new PrepareStatement<>(whereSql.toString(), whereParams);
+        List<ColumnValue> whereParams = new ArrayList<>();
+        appendCriteria(this, whereSql, whereParams, useAlias);
+        return new PrepareStatement(whereSql.toString(), whereParams);
     }
 
 
     /**
-     * 扩展`where`语句
+     * 扩展条件语句
      *
      * @param criteria    条件
-     * @param whereSql    `where`语句字串构造器
+     * @param criteriaSql `where`语句字串构造器
      * @param whereParams `where`参数列表
      */
-    private void appendWhere(Criteria criteria, StringBuilder whereSql, List<KeyValuePair> whereParams, boolean useAlias) {
+    private void appendCriteria(Criteria criteria, StringBuilder criteriaSql, List<ColumnValue> whereParams, boolean useAlias) {
         if (null != criteria.getItem()) {
+
             CriteriaItem item = criteria.getItem();
-            PrepareStatement<KeyValuePair> statement = item.getPrepareStatement(useAlias);
-            whereSql.append(statement.getPrepareSql());
+            PrepareStatement statement = item.getPrepareStatement(useAlias);
+            criteriaSql.append(statement.getPrepareSql());
             whereParams.addAll(statement.getValues());
+
         } else if (CollectionUtils.isNotEmpty(criteria.getSubCriterion())) {
             // 条件只有一个的时候优化
             if (1 == criteria.getSubCriterion().size()) {
-                appendWhere(criteria.getSubCriterion().get(0), whereSql, whereParams, useAlias);
+                appendCriteria(criteria.getSubCriterion().get(0), criteriaSql, whereParams, useAlias);
             } else {
-                whereSql.append("(");
+                criteriaSql.append("(");
                 List<Criteria> subCriterion = criteria.getSubCriterion();
                 for (int i = 0; i < subCriterion.size(); i++) {
                     Criteria subCriteria = subCriterion.get(i);
                     if (0 != i) {
-                        whereSql.append(" ").append(subCriteria.getLogical().name()).append(" ");
+                        criteriaSql.append(" ").append(subCriteria.getLogical().name()).append(" ");
                     }
                     if (null != subCriteria.getItem() || CollectionUtils.isNotEmpty(subCriteria.getSubCriterion())) {
-                        appendWhere(subCriteria, whereSql, whereParams, useAlias);
+                        appendCriteria(subCriteria, criteriaSql, whereParams, useAlias);
                     }
                 }
-                whereSql.append(")");
+                criteriaSql.append(")");
             }
         }
     }

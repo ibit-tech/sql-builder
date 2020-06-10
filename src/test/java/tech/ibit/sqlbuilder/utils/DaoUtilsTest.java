@@ -4,16 +4,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import tech.ibit.sqlbuilder.*;
-import tech.ibit.sqlbuilder.exception.ColumnNullPointerException;
-import tech.ibit.sqlbuilder.exception.IdAutoIncreaseException;
-import tech.ibit.sqlbuilder.exception.IdNullPointerException;
-import tech.ibit.sqlbuilder.exception.IdValueNotFoundException;
+import tech.ibit.sqlbuilder.exception.SqlException;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 /**
- * @author IBIT TECH
+ * @author IBIT程序猿
  * @version 1.0
  */
 public class DaoUtilsTest extends CommonTest {
@@ -21,69 +18,123 @@ public class DaoUtilsTest extends CommonTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+
     @Test
     public void getByIds() {
-        SqlParams sqlParams = DaoUtils.getByIds(User.class, Arrays.asList(1, 2, 3));
-        assertParamsEquals("SELECT u.user_id, u.login_id, u.email, u.password, u.mobile_phone, u.type FROM user u WHERE u.user_id IN(?, ?, ?) LIMIT ?, ?",
-                Arrays.asList("u.user_id", 1, "u.user_id", 2, "u.user_id", 3, "$start", 0, "$limit", 3), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.getByIds(User.class, Arrays.asList(1, 2, 3));
+        assertPrepareStatementEquals(
+                "SELECT u.user_id, u.login_id, u.email, u.password, u.mobile_phone, u.type FROM user u WHERE u.user_id IN(?, ?, ?) LIMIT ?, ?",
+                Arrays.asList(
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2),
+                        UserProperties.userId.value(3),
+                        getStartColumn().value(0),
+                        getLimitColumn().value(3)
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.getByIds(User.class, Collections.singletonList(1));
-        assertParamsEquals("SELECT u.user_id, u.login_id, u.email, u.password, u.mobile_phone, u.type FROM user u WHERE u.user_id = ? LIMIT ?, ?",
-                Arrays.asList("u.user_id", 1, "$start", 0, "$limit", 1), sqlParams);
+        prepareStatement = DaoUtils.getByIds(User.class, Collections.singletonList(1));
+        assertPrepareStatementEquals(
+                "SELECT u.user_id, u.login_id, u.email, u.password, u.mobile_phone, u.type FROM user u WHERE u.user_id = ? LIMIT ?, ?",
+                Arrays.asList(
+                        UserProperties.userId.value(1),
+                        getStartColumn().value(0),
+                        getLimitColumn().value(1)
+                ), prepareStatement);
     }
 
     @Test
     public void getById() {
-        SqlParams sqlParams = DaoUtils.getById(User.class, 1);
-        assertParamsEquals("SELECT u.user_id, u.login_id, u.email, u.password, u.mobile_phone, u.type FROM user u WHERE u.user_id = ? LIMIT ?, ?",
-                Arrays.asList("u.user_id", 1, "$start", 0, "$limit", 1), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.getById(User.class, 1);
+        assertPrepareStatementEquals(
+                "SELECT u.user_id, u.login_id, u.email, u.password, u.mobile_phone, u.type FROM user u WHERE u.user_id = ? LIMIT ?, ?",
+                Arrays.asList(
+                        UserProperties.userId.value(1),
+                        getStartColumn().value(0),
+                        getLimitColumn().value(1)
+                ), prepareStatement);
     }
 
     @Test
     public void getByMultiIds() {
         UserMultiId uKey1 = new UserMultiId(1);
         UserMultiId uKey2 = new UserMultiId(2);
-        SqlParams sqlParams = DaoUtils.getByMultiIds(User.class, Arrays.asList(uKey1, uKey2));
-        assertParamsEquals("SELECT u.user_id, u.login_id, u.email, u.password, u.mobile_phone, u.type FROM user u WHERE u.user_id IN(?, ?) LIMIT ?, ?",
-                Arrays.asList("u.user_id", 1, "u.user_id", 2, "$start", 0, "$limit", 2), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.getByMultiIds(User.class, Arrays.asList(uKey1, uKey2));
+        assertPrepareStatementEquals(
+                "SELECT u.user_id, u.login_id, u.email, u.password, u.mobile_phone, u.type FROM user u WHERE u.user_id IN(?, ?) LIMIT ?, ?",
+                Arrays.asList(
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2),
+                        getStartColumn().value(0),
+                        getLimitColumn().value(2)
+                ), prepareStatement);
 
 
         OrganizationMultiId oKey1 = new OrganizationMultiId("001", "001");
         OrganizationMultiId oKey2 = new OrganizationMultiId("001", "002");
-        sqlParams = DaoUtils.getByMultiIds(Organization.class, Arrays.asList(oKey1, oKey2));
-        assertParamsEquals("SELECT o.city_code, o.name, o.type, o.phone FROM organization o WHERE (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?) LIMIT ?, ?",
-                Arrays.asList("o.city_code", "001", "o.name", "001", "o.city_code", "001", "o.name", "002", "$start", 0, "$limit", 2), sqlParams);
+        prepareStatement = DaoUtils.getByMultiIds(Organization.class, Arrays.asList(oKey1, oKey2));
+        assertPrepareStatementEquals(
+                "SELECT o.city_code, o.name, o.type, o.phone FROM organization o WHERE (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?) LIMIT ?, ?",
+                Arrays.asList(
+                        OrganizationProperties.cityCode.value("001"),
+                        OrganizationProperties.name.value("001"),
+                        OrganizationProperties.cityCode.value("001"),
+                        OrganizationProperties.name.value("002"),
+                        getStartColumn().value(0),
+                        getLimitColumn().value(2)
+                ),
+                prepareStatement);
     }
 
     @Test
     public void getByMultiId() {
         UserMultiId uKey1 = new UserMultiId(1);
-        SqlParams sqlParams = DaoUtils.getByMultiId(User.class, uKey1);
-        assertParamsEquals("SELECT u.user_id, u.login_id, u.email, u.password, u.mobile_phone, u.type FROM user u WHERE u.user_id = ? LIMIT ?, ?",
-                Arrays.asList("u.user_id", 1, "$start", 0, "$limit", 1), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.getByMultiId(User.class, uKey1);
+        assertPrepareStatementEquals(
+                "SELECT u.user_id, u.login_id, u.email, u.password, u.mobile_phone, u.type FROM user u WHERE u.user_id = ? LIMIT ?, ?",
+                Arrays.asList(
+                        UserProperties.userId.value(1),
+                        getStartColumn().value(0),
+                        getLimitColumn().value(1)
+                ), prepareStatement);
 
         OrganizationMultiId oKey1 = new OrganizationMultiId("001", "001");
-        sqlParams = DaoUtils.getByMultiId(Organization.class, oKey1);
-        assertParamsEquals("SELECT o.city_code, o.name, o.type, o.phone FROM organization o WHERE (o.city_code = ? AND o.name = ?) LIMIT ?, ?",
-                Arrays.asList("o.city_code", "001", "o.name", "001", "$start", 0, "$limit", 1), sqlParams);
+        prepareStatement = DaoUtils.getByMultiId(Organization.class, oKey1);
+        assertPrepareStatementEquals(
+                "SELECT o.city_code, o.name, o.type, o.phone FROM organization o WHERE (o.city_code = ? AND o.name = ?) LIMIT ?, ?",
+                Arrays.asList(
+                        OrganizationProperties.cityCode.value("001"),
+                        OrganizationProperties.name.value("001"),
+                        getStartColumn().value(0),
+                        getLimitColumn().value(1)
+                ), prepareStatement);
     }
 
     @Test
     public void deleteByIds() {
-        SqlParams sqlParams = DaoUtils.deleteByIds(User.class, Arrays.asList(1, 2));
-        assertParamsEquals("DELETE FROM user WHERE user_id IN(?, ?)",
-                Arrays.asList("user_id", 1, "user_id", 2), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.deleteByIds(User.class, Arrays.asList(1, 2));
+        assertPrepareStatementEquals(
+                "DELETE u.* FROM user u WHERE u.user_id IN(?, ?)",
+                Arrays.asList(
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2)
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.deleteByIds(User.class, Collections.singletonList(1));
-        assertParamsEquals("DELETE FROM user WHERE user_id = ?",
-                Arrays.asList("user_id", 1), sqlParams);
+        prepareStatement = DaoUtils.deleteByIds(User.class, Collections.singletonList(1));
+        assertPrepareStatementEquals(
+                "DELETE u.* FROM user u WHERE u.user_id = ?",
+                Collections.singletonList(
+                        UserProperties.userId.value(1)
+                ), prepareStatement);
     }
 
     @Test
     public void deleteById() {
-        SqlParams sqlParams = DaoUtils.deleteById(User.class, 1);
-        assertParamsEquals("DELETE FROM user WHERE user_id = ?",
-                Arrays.asList("user_id", 1), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.deleteById(User.class, 1);
+        assertPrepareStatementEquals(
+                "DELETE u.* FROM user u WHERE u.user_id = ?",
+                Collections.singletonList(
+                        UserProperties.userId.value(1)
+                ), prepareStatement);
     }
 
     @Test
@@ -91,37 +142,61 @@ public class DaoUtilsTest extends CommonTest {
         UserMultiId uKey1 = new UserMultiId(1);
         UserMultiId uKey2 = new UserMultiId(2);
 
-        SqlParams sqlParams = DaoUtils.deleteByMultiIds(Collections.singletonList(uKey1));
-        assertParamsEquals("DELETE FROM user WHERE user_id = ?",
-                Arrays.asList("user_id", 1), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.deleteByMultiIds(Collections.singletonList(uKey1));
+        assertPrepareStatementEquals(
+                "DELETE u.* FROM user u WHERE u.user_id = ?",
+                Collections.singletonList(
+                        UserProperties.userId.value(1)
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.deleteByMultiIds(Arrays.asList(uKey1, uKey2));
-        assertParamsEquals("DELETE FROM user WHERE user_id IN(?, ?)",
-                Arrays.asList("user_id", 1, "user_id", 2), sqlParams);
+        prepareStatement = DaoUtils.deleteByMultiIds(Arrays.asList(uKey1, uKey2));
+        assertPrepareStatementEquals(
+                "DELETE u.* FROM user u WHERE u.user_id IN(?, ?)",
+                Arrays.asList(
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2)
+                ), prepareStatement);
 
         OrganizationMultiId oKey1 = new OrganizationMultiId("001", "001");
         OrganizationMultiId oKey2 = new OrganizationMultiId("001", "002");
 
-        sqlParams = DaoUtils.deleteByMultiIds(Collections.singletonList(oKey1));
-        assertParamsEquals("DELETE FROM organization WHERE (city_code = ? AND name = ?)",
-                Arrays.asList("city_code", "001", "name", "001"), sqlParams);
+        prepareStatement = DaoUtils.deleteByMultiIds(Collections.singletonList(oKey1));
+        assertPrepareStatementEquals(
+                "DELETE o.* FROM organization o WHERE (o.city_code = ? AND o.name = ?)",
+                Arrays.asList(
+                        OrganizationProperties.cityCode.value("001"),
+                        OrganizationProperties.name.value("001")
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.deleteByMultiIds(Arrays.asList(oKey1, oKey2));
-        assertParamsEquals("DELETE FROM organization WHERE (city_code = ? AND name = ?) OR (city_code = ? AND name = ?)",
-                Arrays.asList("city_code", "001", "name", "001", "city_code", "001", "name", "002"), sqlParams);
+        prepareStatement = DaoUtils.deleteByMultiIds(Arrays.asList(oKey1, oKey2));
+        assertPrepareStatementEquals(
+                "DELETE o.* FROM organization o WHERE (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?)",
+                Arrays.asList(
+                        OrganizationProperties.cityCode.value("001"),
+                        OrganizationProperties.name.value("001"),
+                        OrganizationProperties.cityCode.value("001"),
+                        OrganizationProperties.name.value("002")
+                ), prepareStatement);
     }
 
     @Test
     public void deleteByMultiId() {
         UserMultiId uKey1 = new UserMultiId(1);
-        SqlParams sqlParams = DaoUtils.deleteByMultiId(uKey1);
-        assertParamsEquals("DELETE FROM user WHERE user_id = ?",
-                Arrays.asList("user_id", 1), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.deleteByMultiId(uKey1);
+        assertPrepareStatementEquals(
+                "DELETE u.* FROM user u WHERE u.user_id = ?",
+                Collections.singletonList(
+                        UserProperties.userId.value(1)
+                ), prepareStatement);
 
         OrganizationMultiId oKey1 = new OrganizationMultiId("001", "001");
-        sqlParams = DaoUtils.deleteByMultiId(oKey1);
-        assertParamsEquals("DELETE FROM organization WHERE (city_code = ? AND name = ?)",
-                Arrays.asList("city_code", "001", "name", "001"), sqlParams);
+        prepareStatement = DaoUtils.deleteByMultiId(oKey1);
+        assertPrepareStatementEquals(
+                "DELETE o.* FROM organization o WHERE (o.city_code = ? AND o.name = ?)",
+                Arrays.asList(
+                        OrganizationProperties.cityCode.value("001"),
+                        OrganizationProperties.name.value("001")
+                ), prepareStatement);
     }
 
     @Test
@@ -133,15 +208,21 @@ public class DaoUtilsTest extends CommonTest {
         user.setMobilePhone("188");
         user.setType(1);
 
-        SqlParams sqlParams = DaoUtils.insertInto(user);
-        assertParamsEquals("INSERT INTO user(login_id, email, password, mobile_phone, type) VALUES(?, ?, ?, ?, ?)",
-                Arrays.asList("login_id", "ibit_tech@aliyun.com", "email", "ibit_tech@aliyun.com", "password", "12345678", "mobile_phone", "188", "type", 1), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.insertInto(user);
+        assertPrepareStatementEquals("INSERT INTO user(login_id, email, password, mobile_phone, type) VALUES(?, ?, ?, ?, ?)",
+                Arrays.asList(
+                        UserProperties.loginId.value("ibit_tech@aliyun.com"),
+                        UserProperties.email.value("ibit_tech@aliyun.com"),
+                        UserProperties.password.value("12345678"),
+                        UserProperties.mobilePhone.value("188"),
+                        UserProperties.type.value(1)
+                ), prepareStatement);
     }
 
     @Test
     public void insertInto1() {
         User user = new User();
-        thrown.expect(ColumnNullPointerException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Table(user)'s column(email) is null!");
         DaoUtils.insertInto(user);
     }
@@ -155,7 +236,7 @@ public class DaoUtilsTest extends CommonTest {
         user.setType(1);
         user.setUserId(1);
 
-        thrown.expect(IdAutoIncreaseException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Table(user)'s id(user_id) cannot be inserted!");
 
         DaoUtils.insertInto(user);
@@ -173,7 +254,7 @@ public class DaoUtilsTest extends CommonTest {
         user2.setEmail("ibittech@ibit.tech");
         user2.setType(2);
 
-        thrown.expect(ColumnNullPointerException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Table(user)'s column(password) is null!");
         DaoUtils.batchInsertInto(Arrays.asList(user, user2), Arrays.asList(UserProperties.email, UserProperties.mobilePhone, UserProperties.type));
     }
@@ -194,11 +275,20 @@ public class DaoUtilsTest extends CommonTest {
         user2.setType(2);
 
 
-        SqlParams sqlParams = DaoUtils.batchInsertInto(Arrays.asList(user, user2),
+        PrepareStatement prepareStatement = DaoUtils.batchInsertInto(Arrays.asList(user, user2),
                 Arrays.asList(UserProperties.email, UserProperties.mobilePhone, UserProperties.type, UserProperties.password));
-        assertParamsEquals("INSERT INTO user(email, mobile_phone, type, password) VALUES(?, ?, ?, ?), (?, ?, ?, ?)",
-                Arrays.asList("email", "ibit_tech@aliyun.com", "mobile_phone", "188", "type", 1, "password", "12345678",
-                        "email", "ibittech@ibit.tech", "mobile_phone", "100", "type", 2, "password", "12345609"), sqlParams);
+        assertPrepareStatementEquals(
+                "INSERT INTO user(email, mobile_phone, type, password) VALUES(?, ?, ?, ?), (?, ?, ?, ?)",
+                Arrays.asList(
+                        UserProperties.email.value("ibit_tech@aliyun.com"),
+                        UserProperties.mobilePhone.value("188"),
+                        UserProperties.type.value(1),
+                        UserProperties.password.value("12345678"),
+                        UserProperties.email.value("ibittech@ibit.tech"),
+                        UserProperties.mobilePhone.value("100"),
+                        UserProperties.type.value(2),
+                        UserProperties.password.value("12345609")
+                ), prepareStatement);
     }
 
     @Test
@@ -209,21 +299,36 @@ public class DaoUtilsTest extends CommonTest {
         user.setType(1);
         user.setUserId(1);
 
-        SqlParams sqlParams = DaoUtils.updateById(user);
-        assertParamsEquals("UPDATE user u SET u.email = ?, u.mobile_phone = ?, u.type = ? WHERE u.user_id = ?",
-                Arrays.asList("u.email", "ibit_tech@aliyun.com", "u.mobile_phone", "188", "u.type", 1, "u.user_id", 1), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.updateById(user);
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.email = ?, u.mobile_phone = ?, u.type = ? WHERE u.user_id = ?",
+                Arrays.asList(
+                        UserProperties.email.value("ibit_tech@aliyun.com"),
+                        UserProperties.mobilePhone.value("188"),
+                        UserProperties.type.value(1),
+                        UserProperties.userId.value(1)
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateById(user, Arrays.asList(UserProperties.loginId, UserProperties.mobilePhone));
-        assertParamsEquals("UPDATE user u SET u.login_id = ?, u.mobile_phone = ? WHERE u.user_id = ?",
-                Arrays.asList("u.login_id", null, "u.mobile_phone", "188", "u.user_id", 1), sqlParams);
+        prepareStatement = DaoUtils.updateById(user, Arrays.asList(UserProperties.loginId, UserProperties.mobilePhone));
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.login_id = ?, u.mobile_phone = ? WHERE u.user_id = ?",
+                Arrays.asList(
+                        UserProperties.loginId.value(null),
+                        UserProperties.mobilePhone.value("188"),
+                        UserProperties.userId.value(1)
+                ), prepareStatement);
 
         Organization org = new Organization();
         org.setType(1);
         org.setCityCode("0001");
         org.setName("广州");
-        sqlParams = DaoUtils.updateById(org);
-        assertParamsEquals("UPDATE organization o SET o.type = ? WHERE o.city_code = ? AND o.name = ?",
-                Arrays.asList("o.type", 1, "o.city_code", "0001", "o.name", "广州"), sqlParams);
+        prepareStatement = DaoUtils.updateById(org);
+        assertPrepareStatementEquals("UPDATE organization o SET o.type = ? WHERE o.city_code = ? AND o.name = ?",
+                Arrays.asList(
+                        OrganizationProperties.type.value(1),
+                        OrganizationProperties.cityCode.value("0001"),
+                        OrganizationProperties.name.value("广州")
+                ), prepareStatement);
 
     }
 
@@ -235,7 +340,7 @@ public class DaoUtilsTest extends CommonTest {
         user.setMobilePhone("188");
         user.setType(1);
 
-        thrown.expect(IdNullPointerException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Table(user)'s id(user_id) is null!");
         DaoUtils.updateById(user);
     }
@@ -246,7 +351,7 @@ public class DaoUtilsTest extends CommonTest {
         Organization org = new Organization();
         org.setType(1);
         org.setCityCode("0001");
-        thrown.expect(IdNullPointerException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Table(organization)'s id(name) is null!");
         DaoUtils.updateById(org);
     }
@@ -257,7 +362,7 @@ public class DaoUtilsTest extends CommonTest {
         User user = new User();
         user.setUserId(1);
 
-        thrown.expect(ColumnNullPointerException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Table(user)'s column(password) is null!");
         DaoUtils.updateById(user, Collections.singletonList(UserProperties.password));
     }
@@ -269,26 +374,59 @@ public class DaoUtilsTest extends CommonTest {
         User user = new User();
         user.setType(1);
         user.setPassword("12345678");
-        SqlParams sqlParams = DaoUtils.updateByIds(user, Arrays.asList(1, 2, 3));
-        assertParamsEquals("UPDATE user u SET u.password = ?, u.type = ? WHERE u.user_id IN(?, ?, ?)",
-                Arrays.asList("u.password", "12345678", "u.type", 1, "u.user_id", 1, "u.user_id", 2, "u.user_id", 3), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.updateByIds(user, Arrays.asList(1, 2, 3));
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.password = ?, u.type = ? WHERE u.user_id IN(?, ?, ?)",
+                Arrays.asList(
+                        UserProperties.password.value("12345678"),
+                        UserProperties.type.value("1"),
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2),
+                        UserProperties.userId.value(3)
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByIds(user, Collections.singletonList(1));
-        assertParamsEquals("UPDATE user u SET u.password = ?, u.type = ? WHERE u.user_id = ?",
-                Arrays.asList("u.password", "12345678", "u.type", 1, "u.user_id", 1), sqlParams);
+        prepareStatement = DaoUtils.updateByIds(user, Collections.singletonList(1));
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.password = ?, u.type = ? WHERE u.user_id = ?",
+                Arrays.asList(
+                        UserProperties.password.value("12345678"),
+                        UserProperties.type.value("1"),
+                        UserProperties.userId.value(1)
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByIds(user, Collections.singletonList(UserProperties.type), Arrays.asList(1, 2, 3));
-        assertParamsEquals("UPDATE user u SET u.type = ? WHERE u.user_id IN(?, ?, ?)",
-                Arrays.asList("u.type", 1, "u.user_id", 1, "u.user_id", 2, "u.user_id", 3), sqlParams);
+        prepareStatement = DaoUtils.updateByIds(user, Collections.singletonList(UserProperties.type), Arrays.asList(1, 2, 3));
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.type = ? WHERE u.user_id IN(?, ?, ?)",
+                Arrays.asList(
+                        UserProperties.type.value("1"),
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2),
+                        UserProperties.userId.value(3)
+                ), prepareStatement);
 
 
-        sqlParams = DaoUtils.updateByIds(user, Arrays.asList(UserProperties.type, UserProperties.password), Arrays.asList(1, 2, 3));
-        assertParamsEquals("UPDATE user u SET u.type = ?, u.password = ? WHERE u.user_id IN(?, ?, ?)",
-                Arrays.asList("u.type", 1, "u.password", "12345678", "u.user_id", 1, "u.user_id", 2, "u.user_id", 3), sqlParams);
+        prepareStatement = DaoUtils.updateByIds(user, Arrays.asList(UserProperties.type, UserProperties.password), Arrays.asList(1, 2, 3));
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.type = ?, u.password = ? WHERE u.user_id IN(?, ?, ?)",
+                Arrays.asList(
+                        UserProperties.type.value(1),
+                        UserProperties.password.value("12345678"),
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2),
+                        UserProperties.userId.value(3)
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByIds(user, Arrays.asList(UserProperties.type, UserProperties.password, UserProperties.loginId), Arrays.asList(1, 2, 3));
-        assertParamsEquals("UPDATE user u SET u.type = ?, u.password = ?, u.login_id = ? WHERE u.user_id IN(?, ?, ?)",
-                Arrays.asList("u.type", 1, "u.password", "12345678", "u.login_id", null, "u.user_id", 1, "u.user_id", 2, "u.user_id", 3), sqlParams);
+        prepareStatement = DaoUtils.updateByIds(user, Arrays.asList(UserProperties.type, UserProperties.password, UserProperties.loginId), Arrays.asList(1, 2, 3));
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.type = ?, u.password = ?, u.login_id = ? WHERE u.user_id IN(?, ?, ?)",
+                Arrays.asList(
+                        UserProperties.type.value(1),
+                        UserProperties.password.value("12345678"),
+                        UserProperties.loginId.value(null),
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2),
+                        UserProperties.userId.value(3)
+                ), prepareStatement);
     }
 
 
@@ -297,7 +435,7 @@ public class DaoUtilsTest extends CommonTest {
     public void updateByIds1() {
         User user = new User();
         user.setType(1);
-        thrown.expect(IdValueNotFoundException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Id value not found");
         DaoUtils.updateByIds(user, Collections.emptyList());
     }
@@ -307,7 +445,7 @@ public class DaoUtilsTest extends CommonTest {
     public void updateByIds2() {
         User user = new User();
         user.setType(1);
-        thrown.expect(ColumnNullPointerException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Table(user)'s column(password) is null!");
         DaoUtils.updateByIds(user, Collections.singletonList(UserProperties.password), Arrays.asList(1, 2));
     }
@@ -321,29 +459,62 @@ public class DaoUtilsTest extends CommonTest {
         UserMultiId uKey1 = new UserMultiId(1);
         UserMultiId uKey2 = new UserMultiId(2);
         UserMultiId uKey3 = new UserMultiId(3);
-        SqlParams sqlParams = DaoUtils.updateByMultiIds(user, Arrays.asList(uKey1, uKey2, uKey3));
-        assertParamsEquals("UPDATE user u SET u.password = ?, u.type = ? WHERE u.user_id IN(?, ?, ?)",
-                Arrays.asList("u.password", "12345678", "u.type", 1, "u.user_id", 1, "u.user_id", 2, "u.user_id", 3), sqlParams);
+        PrepareStatement prepareStatement = DaoUtils.updateByMultiIds(user, Arrays.asList(uKey1, uKey2, uKey3));
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.password = ?, u.type = ? WHERE u.user_id IN(?, ?, ?)",
+                Arrays.asList(
+                        UserProperties.password.value("12345678"),
+                        UserProperties.type.value(1),
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2),
+                        UserProperties.userId.value(3)
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByMultiIds(user, Collections.singletonList(uKey1));
-        assertParamsEquals("UPDATE user u SET u.password = ?, u.type = ? WHERE u.user_id = ?",
-                Arrays.asList("u.password", "12345678", "u.type", 1, "u.user_id", 1), sqlParams);
+        prepareStatement = DaoUtils.updateByMultiIds(user, Collections.singletonList(uKey1));
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.password = ?, u.type = ? WHERE u.user_id = ?",
+                Arrays.asList(
+                        UserProperties.password.value("12345678"),
+                        UserProperties.type.value(1),
+                        UserProperties.userId.value(1)
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByMultiIds(user, Collections.singletonList(UserProperties.type),
+        prepareStatement = DaoUtils.updateByMultiIds(user, Collections.singletonList(UserProperties.type),
                 Arrays.asList(uKey1, uKey2, uKey3));
-        assertParamsEquals("UPDATE user u SET u.type = ? WHERE u.user_id IN(?, ?, ?)",
-                Arrays.asList("u.type", 1, "u.user_id", 1, "u.user_id", 2, "u.user_id", 3), sqlParams);
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.type = ? WHERE u.user_id IN(?, ?, ?)",
+                Arrays.asList(
+                        UserProperties.type.value(1),
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2),
+                        UserProperties.userId.value(3)
+                ), prepareStatement);
 
 
-        sqlParams = DaoUtils.updateByMultiIds(user, Arrays.asList(UserProperties.type, UserProperties.password),
+        prepareStatement = DaoUtils.updateByMultiIds(user, Arrays.asList(UserProperties.type, UserProperties.password),
                 Arrays.asList(uKey1, uKey2, uKey3));
-        assertParamsEquals("UPDATE user u SET u.type = ?, u.password = ? WHERE u.user_id IN(?, ?, ?)",
-                Arrays.asList("u.type", 1, "u.password", "12345678", "u.user_id", 1, "u.user_id", 2, "u.user_id", 3), sqlParams);
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.type = ?, u.password = ? WHERE u.user_id IN(?, ?, ?)",
+                Arrays.asList(
+                        UserProperties.type.value(1),
+                        UserProperties.password.value("12345678"),
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2),
+                        UserProperties.userId.value(3)
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByMultiIds(user, Arrays.asList(UserProperties.type, UserProperties.password, UserProperties.loginId),
+        prepareStatement = DaoUtils.updateByMultiIds(user, Arrays.asList(UserProperties.type, UserProperties.password, UserProperties.loginId),
                 Arrays.asList(uKey1, uKey2, uKey3));
-        assertParamsEquals("UPDATE user u SET u.type = ?, u.password = ?, u.login_id = ? WHERE u.user_id IN(?, ?, ?)",
-                Arrays.asList("u.type", 1, "u.password", "12345678", "u.login_id", null, "u.user_id", 1, "u.user_id", 2, "u.user_id", 3), sqlParams);
+        assertPrepareStatementEquals(
+                "UPDATE user u SET u.type = ?, u.password = ?, u.login_id = ? WHERE u.user_id IN(?, ?, ?)",
+                Arrays.asList(
+                        UserProperties.type.value(1),
+                        UserProperties.password.value("12345678"),
+                        UserProperties.loginId.value(null),
+                        UserProperties.userId.value(1),
+                        UserProperties.userId.value(2),
+                        UserProperties.userId.value(3)
+                ), prepareStatement);
 
 
         Organization org = new Organization();
@@ -353,35 +524,77 @@ public class DaoUtilsTest extends CommonTest {
         OrganizationMultiId oKey2 = new OrganizationMultiId("0002", "深圳市");
         OrganizationMultiId oKey3 = new OrganizationMultiId("0003", "中山市");
 
-        sqlParams = DaoUtils.updateByMultiIds(org, Collections.singletonList(oKey1));
-        assertParamsEquals("UPDATE organization o SET o.type = ? WHERE (o.city_code = ? AND o.name = ?)",
-                Arrays.asList("o.type", 1, "o.city_code", "0001", "o.name", "广州市"), sqlParams);
+        prepareStatement = DaoUtils.updateByMultiIds(org, Collections.singletonList(oKey1));
+        assertPrepareStatementEquals(
+                "UPDATE organization o SET o.type = ? WHERE (o.city_code = ? AND o.name = ?)",
+                Arrays.asList(
+                        OrganizationProperties.type.value(1),
+                        OrganizationProperties.cityCode.value("0001"),
+                        OrganizationProperties.name.value("广州市")
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByMultiIds(org,
+        prepareStatement = DaoUtils.updateByMultiIds(org,
                 Arrays.asList(oKey1, oKey2, oKey3));
-        assertParamsEquals("UPDATE organization o SET o.type = ? WHERE (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?)",
-                Arrays.asList("o.type", 1, "o.city_code", "0001", "o.name", "广州市", "o.city_code", "0002", "o.name", "深圳市", "o.city_code", "0003", "o.name", "中山市"), sqlParams);
+        assertPrepareStatementEquals(
+                "UPDATE organization o SET o.type = ? WHERE (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?)",
+                Arrays.asList(
+                        OrganizationProperties.type.value(1),
+                        OrganizationProperties.cityCode.value("0001"),
+                        OrganizationProperties.name.value("广州市"),
+                        OrganizationProperties.cityCode.value("0002"),
+                        OrganizationProperties.name.value("深圳市"),
+                        OrganizationProperties.cityCode.value("0003"),
+                        OrganizationProperties.name.value("中山市")
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByMultiIds(org, Collections.singletonList(OrganizationProperties.type),
+        prepareStatement = DaoUtils.updateByMultiIds(org, Collections.singletonList(OrganizationProperties.type),
                 Collections.singletonList(oKey1));
-        assertParamsEquals("UPDATE organization o SET o.type = ? WHERE (o.city_code = ? AND o.name = ?)",
-                Arrays.asList("o.type", 1, "o.city_code", "0001", "o.name", "广州市"), sqlParams);
+        assertPrepareStatementEquals(
+                "UPDATE organization o SET o.type = ? WHERE (o.city_code = ? AND o.name = ?)",
+                Arrays.asList(
+                        OrganizationProperties.type.value(1),
+                        OrganizationProperties.cityCode.value("0001"),
+                        OrganizationProperties.name.value("广州市")
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByMultiIds(org, Arrays.asList(OrganizationProperties.phone, OrganizationProperties.type),
+        prepareStatement = DaoUtils.updateByMultiIds(org, Arrays.asList(OrganizationProperties.phone, OrganizationProperties.type),
                 Collections.singletonList(oKey1));
-        assertParamsEquals("UPDATE organization o SET o.phone = ?, o.type = ? WHERE (o.city_code = ? AND o.name = ?)",
-                Arrays.asList("o.phone", null, "o.type", 1, "o.city_code", "0001", "o.name", "广州市"), sqlParams);
+        assertPrepareStatementEquals(
+                "UPDATE organization o SET o.phone = ?, o.type = ? WHERE (o.city_code = ? AND o.name = ?)",
+                Arrays.asList(
+                        OrganizationProperties.phone.value(null),
+                        OrganizationProperties.type.value(1),
+                        OrganizationProperties.cityCode.value("0001"),
+                        OrganizationProperties.name.value("广州市")
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByMultiIds(org, Collections.singletonList(OrganizationProperties.type)
+        prepareStatement = DaoUtils.updateByMultiIds(org, Collections.singletonList(OrganizationProperties.type)
                 , Arrays.asList(oKey1, oKey2, oKey3));
-        assertParamsEquals("UPDATE organization o SET o.type = ? WHERE (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?)",
-                Arrays.asList("o.type", 1, "o.city_code", "0001", "o.name", "广州市", "o.city_code", "0002", "o.name", "深圳市", "o.city_code", "0003", "o.name", "中山市"), sqlParams);
+        assertPrepareStatementEquals("UPDATE organization o SET o.type = ? WHERE (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?)",
+                Arrays.asList(
+                        OrganizationProperties.type.value(1),
+                        OrganizationProperties.cityCode.value("0001"),
+                        OrganizationProperties.name.value("广州市"),
+                        OrganizationProperties.cityCode.value("0002"),
+                        OrganizationProperties.name.value("深圳市"),
+                        OrganizationProperties.cityCode.value("0003"),
+                        OrganizationProperties.name.value("中山市")
+                ), prepareStatement);
 
-        sqlParams = DaoUtils.updateByMultiIds(org, Arrays.asList(OrganizationProperties.phone, OrganizationProperties.type)
+        prepareStatement = DaoUtils.updateByMultiIds(org, Arrays.asList(OrganizationProperties.phone, OrganizationProperties.type)
                 , Arrays.asList(oKey1, oKey2, oKey3));
-        assertParamsEquals("UPDATE organization o SET o.phone = ?, o.type = ? WHERE (o.city_code = ? AND o.name = ?) "
+        assertPrepareStatementEquals("UPDATE organization o SET o.phone = ?, o.type = ? WHERE (o.city_code = ? AND o.name = ?) "
                         + "OR (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?)",
-                Arrays.asList("o.phone", null, "o.type", 1, "o.city_code", "0001", "o.name", "广州市", "o.city_code", "0002", "o.name", "深圳市", "o.city_code", "0003", "o.name", "中山市"), sqlParams);
+                Arrays.asList(
+                        OrganizationProperties.phone.value(null),
+                        OrganizationProperties.type.value(1),
+                        OrganizationProperties.cityCode.value("0001"),
+                        OrganizationProperties.name.value("广州市"),
+                        OrganizationProperties.cityCode.value("0002"),
+                        OrganizationProperties.name.value("深圳市"),
+                        OrganizationProperties.cityCode.value("0003"),
+                        OrganizationProperties.name.value("中山市")
+                ), prepareStatement);
 
     }
 
@@ -390,7 +603,7 @@ public class DaoUtilsTest extends CommonTest {
     public void updateByMultiIds1() {
         Organization org = new Organization();
         org.setType(1);
-        thrown.expect(IdValueNotFoundException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Id value not found");
         DaoUtils.updateByMultiIds(org, Collections.emptyList());
     }
@@ -402,7 +615,7 @@ public class DaoUtilsTest extends CommonTest {
 
         OrganizationMultiId oKey1 = new OrganizationMultiId("0001", "广州市");
         OrganizationMultiId oKey2 = new OrganizationMultiId("0002", "深圳市");
-        thrown.expect(ColumnNullPointerException.class);
+        thrown.expect(SqlException.class);
         thrown.expectMessage("Table(organization)'s column(type) is null!");
         DaoUtils.updateByMultiIds(org, Collections.singletonList(OrganizationProperties.type), Arrays.asList(oKey1, oKey2));
     }

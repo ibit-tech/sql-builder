@@ -1,9 +1,122 @@
-# sql-builder
+# sql-builder（2.x)
 
 ## 关于sql-builder
 
-[sql-builder](https://github.com/ibit-tech/sql-builder)尝试使用java对象，通过`类SQL`的拼接方式，动态快速的生成SQL。它可作为稍后的开源项目[ibit-mybatis](https://github.com/ibit-tech/ibit-mybatis)的核心类库。
-sql-builder提供了对象拼接的构造类`Sql`和字符串拼接的构造类`StringSql`。
+[sql-builder](https://github.com/ibit-tech/sql-builder)尝试使用java对象，通过`类SQL`的拼接方式，动态快速的生成SQL。它可作为开源项目[ibit-mybatis](https://github.com/ibit-tech/ibit-mybatis)的核心类库。
+
+## 核心类说明
+
+
+### 使用`SqlFactory` 构造Sql对象
+
+```
+@UtilityClass
+public class SqlFactory {
+
+    /**
+     * 创建搜索
+     *
+     * @return 搜索sql
+     */
+    public SearchSql createSearch() {
+        return new SearchSqlImpl();
+    }
+
+
+    /**
+     * 创建计数
+     *
+     * @return 计数sql
+     */
+    public CountSql createCount() {
+        return new CountSqlImpl();
+    }
+
+    /**
+     * 创建删除
+     *
+     * @return 删除sql
+     */
+    public DeleteSql createDelete() {
+        return new DeleteSqlImpl();
+    }
+
+    /**
+     * 创建插入
+     *
+     * @return 插入sql
+     */
+    public InsertSql createInsert() {
+        return new InsertSqlImpl();
+    }
+
+    /**
+     * 创建更新
+     *
+     * @return 更新sql
+     */
+    public UpdateSql createUpdate() {
+        return new UpdateSqlImpl();
+    }
+
+}
+```
+
+### sql对象说明
+
+| 接口 | 说明 |
+| --- | --- | 
+| SearchSql | 搜索 |
+| CountSql | 计数 |
+| DeleteSql | 删除 |
+| InsertSql | 插入 |
+| UpdateSql | 更新 |
+
+**说明**： 上述类都继承 `SqlSupport<T>`, 方法 PrepareStatement getPrepareStatement(); 返回的对应的预查询sql对象（包含预查询sql和对应参数列表）。
+
+### `PrepareStatement` 说明
+
+```
+@Data
+@AllArgsConstructor
+public class PrepareStatement {
+
+    /**
+     * 预查询SQL
+     */
+    private String prepareSql;
+
+    /**
+     * 插入值列表
+     */
+    private List<ColumnValue> values;
+
+    /**
+     * 获取空的PrepareStatement
+     *
+     * @return PrepareStatement
+     */
+    public static PrepareStatement empty() {
+        return new PrepareStatement("", Collections.emptyList());
+    }
+
+    /**
+     * 获取参数列表
+     *
+     * @return 参数列表
+     */
+    public List<Object> getParams() {
+        if (CollectionUtils.isEmpty(values)) {
+            return Collections.emptyList();
+        }
+        return values.stream().map(ColumnValue::getValue).collect(Collectors.toList());
+    }
+}
+```
+
+**说明**: values 为 ColumnValue, 主要为了之后做字段加密解密预留的，知道对应列与相应的值。
+
+
 
 ## Sql构造示例
 
@@ -13,111 +126,185 @@ sql-builder提供了对象拼接的构造类`Sql`和字符串拼接的构造类`
 
 ```
 // 传入列
-Sql sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name))
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name)
+        )
         .from(UserProperties.TABLE);
-assertParamsEquals("SELECT u.user_id, u.name FROM user u", sql.getSqlParams());
+assertPrepareStatementEquals("SELECT u.user_id, u.name FROM user u", sql.getPrepareStatement());
 
 // 支持聚合函数
-sql = new Sql().select(Arrays.asList(new SumColumn(UserProperties.userId, "user_id_sum")
-        , new AvgColumn(UserProperties.userId, "user_id_avg")))
-        .from(UserProperties.TABLE).groupBy(UserProperties.userId);
-assertParamsEquals("SELECT SUM(u.user_id) AS user_id_sum, AVG(u.user_id) AS user_id_avg FROM user u GROUP BY u.user_id"
-        , sql.getSqlParams());
+sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId.sum("user_id_sum"),
+                        UserProperties.userId.avg("user_id_avg")
+                )
+        ).from(UserProperties.TABLE)
+        .groupBy(UserProperties.userId);
+assertPrepareStatementEquals(
+        "SELECT SUM(u.user_id) AS user_id_sum, AVG(u.user_id) AS user_id_avg FROM user u GROUP BY u.user_id",
+        sql.getPrepareStatement());
 
 ```
 
-### selectDistinct
+### select distinct
 
 ```
-Sql sql = new Sql()
-        .selectDistinct(UserProperties.email)
+SearchSql sql = SqlFactory.createSearch()
+        .distinct()
+        .column(UserProperties.email)
         .from(UserProperties.TABLE);
-assertParamsEquals("SELECT DISTINCT u.email FROM user u", Collections.emptyList(), sql.getSqlParams());
+assertPrepareStatementEquals(
+        "SELECT DISTINCT u.email FROM user u",
+        sql.getPrepareStatement());
 ```
 
-### selectPo（解析传入类）
+### select 传入类
 
 ```
-Sql sql = new Sql()
-        .selectPo(UserPo.class)
+SearchSql sql = SqlFactory.createSearch()
+        .columnPo(UserPo.class)
         .from(UserProperties.TABLE);
-assertParamsEquals("SELECT u.user_id, u.login_id, u.email, u.mobile_phone, u.type FROM user u",
-        Collections.emptyList(), sql.getSqlParams());
-```
-
-### selectDistinctPo
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.login_id, u.email, u.mobile_phone, u.type FROM user u",
+        sql.getPrepareStatement());
 
 ```
-Sql sql = new Sql()
-        .selectDistinctPo(UserPo.class)
+
+### select distinct 传入类
+
+```
+SearchSql sql = SqlFactory.createSearch()
+        .distinct()
+        .columnPo(UserPo.class)
         .from(UserProperties.TABLE).limit(1000);
-assertParamsEquals("SELECT DISTINCT u.user_id, u.login_id, u.email, u.mobile_phone, u.type FROM user u LIMIT ?, ?",
-        Arrays.asList("$start", 0, "$limit", 1000), sql.getSqlParams());
+
+assertPrepareStatementEquals(
+        "SELECT DISTINCT u.user_id, u.login_id, u.email, u.mobile_phone, u.type FROM user u LIMIT ?, ?",
+        Arrays.asList(
+                getStartColumn().value(0),
+                getLimitColumn().value(1000)
+        ), sql.getPrepareStatement());
 ```
 
 ### count
 
 ```
-Sql sql = new Sql()
-        .count()
+CountSql sql = SqlFactory.createCount()
         .from(UserProperties.TABLE);
-assertParamsEquals("SELECT COUNT(*) FROM user u", sql.getSqlParams());
+assertPrepareStatementEquals("SELECT COUNT(*) FROM user u", sql.getPrepareStatement());
 ```
 
-### countDistinct
+### count distinct
 
 ```
 // 传入单列
-Sql sql = new Sql()
-        .countDistinct(UserProperties.userId)
+CountSql sql = SqlFactory.createCount()
+        .distinct()
+        .column(UserProperties.userId)
         .from(UserProperties.TABLE);
-assertParamsEquals("SELECT COUNT(DISTINCT u.user_id) FROM user u", sql.getSqlParams());
+assertPrepareStatementEquals(
+        "SELECT COUNT(DISTINCT u.user_id) FROM user u",
+        sql.getPrepareStatement());
 
 // 传入多列
-sql = new Sql()
-        .countDistinct(Arrays.asList(UserProperties.name, UserProperties.email))
+sql = SqlFactory.createCount()
+        .distinct()
+        .column(
+                Arrays.asList(
+                        UserProperties.name,
+                        UserProperties.email
+                )
+        )
         .from(UserProperties.TABLE);
-assertParamsEquals("SELECT COUNT(DISTINCT u.name, u.email) FROM user u", sql.getSqlParams());
+assertPrepareStatementEquals(
+        "SELECT COUNT(DISTINCT u.name, u.email) FROM user u",
+        sql.getPrepareStatement());
 ```
 
-### deleteFrom
+### delete from（异常）
 
 ```
 // 删除操作必须包含where语句，不然这个操作很危险
-Sql sql = new Sql().deleteFrom(UserProperties.TABLE);
+DeleteSql sql = SqlFactory.createDelete()
+        .deleteFrom(UserProperties.TABLE);
 thrown.expect(RuntimeException.class);
 thrown.expectMessage("Where cannot be empty when do deleting!");
-sql.getSqlParams();
+sql.getPrepareStatement();
+```
 
-// 正常删除
-Sql sql = new Sql()
+### delete from（单表删除）
+
+```
+// 代码片段1：正常删除
+DeleteSql sql = SqlFactory.createDelete()
         .deleteFrom(UserProperties.TABLE)
-        .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-assertParamsEquals("DELETE FROM user WHERE user_id = ?",
-        Arrays.asList("user_id", 1), sql.getSqlParams());
+        .andWhere(UserProperties.userId.eq(1));
+assertPrepareStatementEquals(
+        "DELETE u.* FROM user u WHERE u.user_id = ?",
+        Collections.singletonList(
+                UserProperties.userId.value(1)
+        ),
+        sql.getPrepareStatement());
+        
+// 代码片段2：等价于代码片段1
+sql = SqlFactory.createDelete()
+        .delete(UserProperties.TABLE)
+        .from(UserProperties.TABLE)
+        .andWhere(UserProperties.userId.eq(1));
+assertPrepareStatementEquals(
+        "DELETE u.* FROM user u WHERE u.user_id = ?",
+        Collections.singletonList(
+                UserProperties.userId.value(1)
+        ),
+        sql.getPrepareStatement());             
 ```
 
-### deleteTableFrom（支持别名）
+### delete from（多表删除）
 
 ```
-// 正常删除
-Sql sql = new Sql()
-        .deleteTableFrom(UserProperties.TABLE)
-        .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-assertParamsEquals("DELETE u.* FROM user u WHERE u.user_id = ?",
-        Arrays.asList("u.user_id", 1), sql.getSqlParams());
+// 代码片段1：支持join on
+DeleteSql sql = SqlFactory.createDelete()
+        .deleteFrom(UserProperties.TABLE)
+        .andWhere(UserProperties.userId.eq(1))
+        .leftJoinOn(
+                OrganizationProperties.TABLE,
+                Arrays.asList(
+                        UserProperties.orgId,
+                        OrganizationProperties.orgId
+                )
+        );
+assertPrepareStatementEquals(
+        "DELETE u.* FROM user u LEFT JOIN organization o ON u.org_id = o.org_id WHERE u.user_id = ?",
+        Collections.singletonList(
+                UserProperties.userId.value(1)
+        ),
+        sql.getPrepareStatement()); 
 
-// 支持join的删除
-sql = new Sql()
-        .deleteTableFrom(UserProperties.TABLE)
-        .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1))
-        .leftJoinOn(OrganizationProperties.TABLE, Arrays.asList(UserProperties.orgId, OrganizationProperties.orgId));
-        assertParamsEquals("DELETE u.* FROM user u LEFT JOIN organization o ON u.org_id = o.org_id WHERE u.user_id = ?",
-                Arrays.asList("u.user_id", 1), sql.getSqlParams());
+// 代码片段2：支持多from
+sql = SqlFactory.createDelete()
+        .delete(UserProperties.TABLE)
+        .from(
+                Arrays.asList(
+                        UserProperties.TABLE,
+                        OrganizationProperties.TABLE
+                )
+        )
+        .andWhere(OrganizationProperties.orgId.eq(UserProperties.orgId))
+        .andWhere(UserProperties.userId.eq(1));
+assertPrepareStatementEquals(
+        "DELETE u.* FROM user u, organization o WHERE o.org_id = u.org_id AND u.user_id = ?",
+        Collections.singletonList(
+                UserProperties.userId.value(1)
+        ),
+        sql.getPrepareStatement());
+
 ```
 
-### update
+### update（异常）
 
 ```
 // update操作必须包含where语句，不然这操作很危险
@@ -127,351 +314,705 @@ Sql sql = new Sql()
 thrown.expect(RuntimeException.class);
 thrown.expectMessage("Where cannot be empty when do updating!");
 sql.getSqlParams();
-
-
-// 正常删除
-sql = new Sql()
-    .update(UserProperties.TABLE)
-    .set(new ColumnValue(UserProperties.name, "IBIT"))
-    .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-assertParamsEquals("UPDATE user u SET u.name = ? WHERE u.user_id = ?",
-        Arrays.asList("u.name", "IBIT", "u.user_id", 1), sql.getSqlParams());
-
 ```
 
-### insertInto & values
+### update（正常更新）
 
 ```
-Sql sql = new Sql()
-        .insertInto(UserProperties.TABLE)
-        .values(Arrays.asList(new ColumnValue(UserProperties.name, "IBIT")
-                , new ColumnValue(UserProperties.loginId, "188")
-                , new ColumnValue(UserProperties.avatarId, null)));
-assertParamsEquals("INSERT INTO user(name, login_id, avatar_id) VALUES(?, ?, ?)",
-        Arrays.asList("name", "IBIT", "login_id", "188", "avatar_id", null), sql.getSqlParams());
+UpdateSql sql = SqlFactory
+        .createUpdate()
+        .update(UserProperties.TABLE)
+        .set(UserProperties.name.set("IBIT"))
+        .andWhere(UserProperties.userId.eq(1));
+
+assertPrepareStatementEquals(
+        "UPDATE user u SET u.name = ? WHERE u.user_id = ?",
+        Arrays.asList(
+                UserProperties.name.value("IBIT"),
+                UserProperties.userId.value(1)
+        ),
+        sql.getPrepareStatement());
 ```
 
 ### set
 
 ```
-Sql sql = new Sql()
+UpdateSql sql = SqlFactory.createUpdate()
         .update(UserProperties.TABLE)
-        .set(Arrays.asList(new ColumnValue(UserProperties.name, "IBIT")
-                , new ColumnValue(UserProperties.loginId, "188")
-                , new ColumnValue(UserProperties.avatarId, null)))
-        .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-assertParamsEquals("UPDATE user u SET u.name = ?, u.login_id = ?, u.avatar_id = ? WHERE u.user_id = ?",
-        Arrays.asList("u.name", "IBIT", "u.login_id", "188", "u.avatar_id", null, "u.user_id", 1), sql.getSqlParams());
+        .set(
+                Arrays.asList(
+                        UserProperties.name.set("IBIT"),
+                        UserProperties.loginId.set("188"),
+                        UserProperties.avatarId.set(null)
+                )
+        ).andWhere(UserProperties.userId.eq(1));
+
+assertPrepareStatementEquals(
+        "UPDATE user u SET u.name = ?, u.login_id = ?, u.avatar_id = ? WHERE u.user_id = ?",
+        Arrays.asList(
+                UserProperties.name.value("IBIT"),
+                UserProperties.loginId.value("188"),
+                UserProperties.avatarId.value(null),
+                UserProperties.userId.value(1)
+        ),
+        sql.getPrepareStatement());
 ```
 
-### increaseSet(字段增长）
+### set 字段增长
 
 ```
-Sql sql = new Sql()
+UpdateSql sql = SqlFactory.createUpdate()
         .update(UserProperties.TABLE)
-        .increaseSet(new ColumnValue(UserProperties.loginTimes, 2))
-        .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-assertParamsEquals("UPDATE user u SET u.login_times = u.login_times + ? WHERE u.user_id = ?", 
-        Arrays.asList("u.login_times", 2, "u.user_id", 1), sql.getSqlParams());
+        .set(UserProperties.loginTimes.increaseSet(2))
+        .andWhere(UserProperties.userId.eq(1));
+assertPrepareStatementEquals(
+        "UPDATE user u SET u.login_times = u.login_times + ? WHERE u.user_id = ?",
+        Arrays.asList(
+                UserProperties.loginTimes.value(2),
+                UserProperties.userId.value(1)
+        ),
+        sql.getPrepareStatement());
 ```
 
 
-### decreaseSet(字段递减)
+### set 字段递减
 
 ```
-Sql sql = new Sql()
+UpdateSql sql = SqlFactory.createUpdate()
         .update(UserProperties.TABLE)
-        .decreaseSet(new ColumnValue(UserProperties.loginTimes, 2))
-        .andWhere(CriteriaItemMaker.equalsTo(UserProperties.userId, 1));
-assertParamsEquals("UPDATE user u SET u.login_times = u.login_times - ? WHERE u.user_id = ?"
-        , Arrays.asList("u.login_times", 2, "u.user_id", 1), sql.getSqlParams());
+        .set(UserProperties.loginTimes.decreaseSet(2))
+        .andWhere(UserProperties.userId.eq(1));
+assertPrepareStatementEquals(
+        "UPDATE user u SET u.login_times = u.login_times - ? WHERE u.user_id = ?",
+        Arrays.asList(
+                UserProperties.loginTimes.value(2),
+                UserProperties.userId.value(1)
+        ),
+        sql.getPrepareStatement());
+```
+
+### insert into & values
+
+```
+InsertSql sql = SqlFactory.createInsert()
+        .insert(UserProperties.TABLE)
+        .values(
+                Arrays.asList(
+                        UserProperties.name.value("IBIT"),
+                        UserProperties.loginId.value("188"),
+                        UserProperties.avatarId.value(null)
+                )
+        );
+
+assertPrepareStatementEquals(
+        "INSERT INTO user(name, login_id, avatar_id) VALUES(?, ?, ?)",
+        Arrays.asList(
+                UserProperties.name.value("IBIT"),
+                UserProperties.loginId.value("188"),
+                UserProperties.avatarId.value(null)
+        ),
+        sql.getPrepareStatement());
 ```
 
 ### from
 
 ```
-Sql sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+// 单个from
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        ProjectProperties.projectId,
+                        ProjectProperties.name
+                )
+        )
+        .from(ProjectProperties.TABLE);
+assertPrepareStatementEquals(
+        "SELECT p.project_id, p.name FROM project p",
+        sql.getPrepareStatement());
+
+// 多个from    
+sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId, 
+                        UserProperties.name, 
+                        ProjectProperties.name
+                )
+        )
         .from(UserProperties.TABLE)
         .from(ProjectProperties.TABLE)
-        .andWhere(CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId));
-assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u, project p WHERE u.current_project_id = p.project_id",
-        Collections.emptyList(), sql.getSqlParams());
-
-sql = new Sql()
-        .select(Arrays.asList(ProjectProperties.projectId, ProjectProperties.name))
-        .from(ProjectProperties.TABLE);
-assertParamsEquals("SELECT p.project_id, p.name FROM project p",
-        Collections.emptyList(), sql.getSqlParams());
+        .andWhere(UserProperties.currentProjectId.eq(ProjectProperties.projectId));
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name, p.name FROM user u, project p WHERE u.current_project_id = p.project_id",
+        sql.getPrepareStatement());
 ```
 
-### joinOn(left, right, full, inner)
+### join on(left, right, full, inner)
 
 ```
-Sql sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+// 代码片段1：join on
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId, 
+                        UserProperties.name, 
+                        ProjectProperties.name
+                )
+        )
         .from(UserProperties.TABLE)
-        .joinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId));
-assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u JOIN sz_project p ON u.current_project_id = p.project_id", sql.getSqlParams());
+        .joinOn(
+                ProjectProperties.TABLE, 
+                Arrays.asList(
+                        UserProperties.currentProjectId, 
+                        ProjectProperties.projectId
+                )
+        );
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name, p.name FROM user u JOIN project p ON u.current_project_id = p.project_id", 
+        sql.getPrepareStatement());
 
-// left join on
-sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+// 代码片段：left join on
+sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId, 
+                        UserProperties.name, 
+                        ProjectProperties.name
+                )
+        )
         .from(UserProperties.TABLE)
-        .leftJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId));
-assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN sz_project p ON u.current_project_id = p.project_id", sql.getSqlParams());
+        .leftJoinOn(
+                ProjectProperties.TABLE, 
+                Arrays.asList(
+                        UserProperties.currentProjectId, 
+                        ProjectProperties.projectId
+                )
+        );
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id", 
+        sql.getPrepareStatement());
 
 // 省略其他join
 ```
 
-### complexJoinOn(支持on后面增加条件，left, right, full, inner)
+### 复杂 join on(支持on后面增加条件，left, right, full, inner)
 
 ```
-        Sql sql = new Sql()
-                .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
-                .from(UserProperties.TABLE)
-                .complexLeftJoinOn(ProjectProperties.TABLE, Collections.singletonList(CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId)));
-        SqlParams sqlParams = sql.getSqlParams();
-        assertEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id", sqlParams.getSql());
-        assertTrue(sqlParams.getParamDetails().isEmpty());
+// 代码片段1：on 列相等
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name,
+                        ProjectProperties.name
+                )
+        )
+        .from(UserProperties.TABLE)
+        .complexLeftJoinOn(
+                ProjectProperties.TABLE,
+                Collections.singletonList(
+                        UserProperties.currentProjectId.eq(ProjectProperties.projectId)
+                )
+        );
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id",
+        sql.getPrepareStatement());
 
-
-        sql = new Sql()
-                .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
-                .from(UserProperties.TABLE)
-                .complexLeftJoinOn(ProjectProperties.TABLE, Arrays.asList(
-                        CriteriaItemMaker.equalsTo(UserProperties.currentProjectId, ProjectProperties.projectId),
-                        CriteriaItemMaker.like(ProjectProperties.name, "小%")));
-        sqlParams = sql.getSqlParams();
-        assertEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p "
-                + "ON u.current_project_id = p.project_id AND p.name LIKE ?", sqlParams.getSql());
-        assertList(sqlParams.getParamDetails(), 1, Arrays.asList("p.name", "小%"));
+// 代码片段2：on 条件语句
+sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name,
+                        ProjectProperties.name
+                )
+        )
+        .from(UserProperties.TABLE)
+        .complexLeftJoinOn(
+                ProjectProperties.TABLE,
+                Arrays.asList(
+                        UserProperties.currentProjectId.eq(ProjectProperties.projectId),
+                        ProjectProperties.name.like("小%")
+                )
+        );
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id AND p.name LIKE ?",
+        Collections.singletonList(
+                ProjectProperties.name.value("小%")
+        ),
+        sql.getPrepareStatement());
         
 // 省略其他join
+...
 ```
 
 ### where（支持构造复杂的where语句）
 
 ```
 List<CriteriaItem> xiaoLikeItems = Arrays.asList(
-        CriteriaItemMaker.like(UserProperties.name, "小%"),
-        CriteriaItemMaker.like(UserProperties.email, "xiao%"));
-CriteriaItem userIdItem = CriteriaItemMaker.greaterThan(UserProperties.userId, 100);
-CriteriaItem type1Item = CriteriaItemMaker.equalsTo(UserProperties.type, 1);
-CriteriaItem type2Item = CriteriaItemMaker.equalsTo(UserProperties.type, 2);
+        UserProperties.name.like("小%"),
+        UserProperties.email.like("xiao%"));
 
-Sql sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name))
-        .from(UserProperties.TABLE)
-        .where(Criteria.ands(Arrays.asList(Criteria.ors(xiaoLikeItems), userIdItem)));
-SqlParams sqlParams = sql.getSqlParams();
-assertList(sqlParams.getParams(), 3, Arrays.asList("小%", "xiao%", 100));
+CriteriaItem userIdItem = UserProperties.userId.gt(100);
+CriteriaItem type1Item = UserProperties.type.eq(1);
+CriteriaItem type2Item = UserProperties.type.eq(2);
 
-sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name))
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name
+                )
+        )
         .from(UserProperties.TABLE)
         .where(
                 Criteria.ands(
-                        Arrays.asList(Criteria.ors(xiaoLikeItems),
-                                Criteria.ors(Collections.singletonList(userIdItem)))
+                        Arrays.asList(
+                                Criteria.ors(xiaoLikeItems),
+                                userIdItem)
                 )
         );
-sqlParams = sql.getSqlParams();
-assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? OR u.email LIKE ?) AND u.user_id > ?",
-        Arrays.asList("小%", "xiao%", 100), sqlParams);
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? OR u.email LIKE ?) AND u.user_id > ?",
+        Arrays.asList(
+                UserProperties.name.value("小%"),
+                UserProperties.email.value("xiao%"),
+                UserProperties.userId.value(100)
+        ),
+        sql.getPrepareStatement());
 
-sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name))
+
+sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name
+                )
+        ).from(UserProperties.TABLE)
+        .where(
+                Criteria.ands(
+                        Arrays.asList(
+                                Criteria.ors(xiaoLikeItems),
+                                Criteria.ors(Collections.singletonList(userIdItem))
+                        )
+                )
+        );
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? OR u.email LIKE ?) AND u.user_id > ?",
+        Arrays.asList(
+                UserProperties.name.value("小%"),
+                UserProperties.email.value("xiao%"),
+                UserProperties.userId.value(100)
+        ),
+        sql.getPrepareStatement());
+
+sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name)
+        )
         .from(UserProperties.TABLE)
         .where(
                 Criteria.ors(Arrays.asList(
                         Criteria.ands(
-                                Arrays.asList(Criteria.ands(
-                                        Arrays.asList(Criteria.ors(xiaoLikeItems),
-                                                Criteria.ors(Collections.singletonList(userIdItem)))),
+                                Arrays.asList(
+                                        Criteria.ands(
+                                                Arrays.asList(
+                                                        Criteria.ors(xiaoLikeItems),
+                                                        Criteria.ors(Collections.singletonList(userIdItem)))
+                                        ),
                                         type1Item)
                         ), type2Item))
         );
-sqlParams = sql.getSqlParams();
-assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE (((u.name LIKE ? OR u.email LIKE ?) AND u.user_id > ?) AND u.type = ?) OR u.type = ?",
-        Arrays.asList("小%", "xiao%", 100, 1, 2), sqlParams);
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name FROM user u WHERE (((u.name LIKE ? OR u.email LIKE ?) AND u.user_id > ?) AND u.type = ?) OR u.type = ?",
+        Arrays.asList(
+                UserProperties.name.value("小%"),
+                UserProperties.email.value("xiao%"),
+                UserProperties.userId.value(100),
+                UserProperties.type.value(1),
+                UserProperties.type.value(2)
+        ),
+        sql.getPrepareStatement());
 ```
 
-### andWhere & orWhere & flag(支持标记位条件）
+### where and
 
 ```
-// and
-Sql sql = new Sql()
-            .select(Arrays.asList(UserProperties.userId, UserProperties.name))
-            .from(UserProperties.TABLE)
-            .andWhere(Criteria.ors(
-                    Arrays.asList(CriteriaItemMaker.like(UserProperties.name, "小%"), CriteriaItemMaker.like(UserProperties.email, "xiao%"))))
-                .limit(1);
-        assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? OR u.email LIKE ?) LIMIT ?, ?"
-                , Arrays.asList("u.name", "小%", "u.email", "xiao%", "$start", 0, "$limit", 1), sql.getSqlParams());
-
-// or
-sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name))
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name
+                )
+        )
         .from(UserProperties.TABLE)
-        .orWhere(Criteria.ands(
-                Arrays.asList(CriteriaItemMaker.like(UserProperties.name, "小%"), CriteriaItemMaker.like(UserProperties.email, "xiao%"))))
-        .orWhere(CriteriaItemMaker.equalsTo(UserProperties.type, 1))
+        .andWhere(UserProperties.userId.eq(1))
         .limit(1);
-assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? AND u.email LIKE ?) OR u.type = ? LIMIT ?, ?",
-        Arrays.asList("u.name", "小%", "u.email", "xiao%", "u.type", 1, "$start", 0, "$limit", 1), sql.getSqlParams());
 
-// CriteriaItemMaker支持构造flag有：containsNoneFlags, containsAllFlags, containsAnyFlags    
-sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name))
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name FROM user u WHERE u.user_id = ? LIMIT ?, ?",
+        Arrays.asList(
+                UserProperties.userId.value(1),
+                getStartColumn().value(0),
+                getLimitColumn().value(1)
+        ),
+        sql.getPrepareStatement());
+
+sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name
+                )
+        )
         .from(UserProperties.TABLE)
-        .andWhere(CriteriaItemMaker.containsNoneFlags(UserProperties.userId, 1));
-assertParamsEquals("SELECT u.user_id, u.name FROM user u WHERE u.user_id & ? = 0",
-        Arrays.asList("u.user_id", 1), sql.getSqlParams());       
+        .andWhere(
+                Criteria.ors(
+                        Arrays.asList(
+                                UserProperties.name.like("小%"),
+                                UserProperties.email.like("xiao%"))
+                )
+        )
+        .limit(1);
 ```
 
-### orderBy
+### where or
 
 ```
-Sql sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name
+                )
+        )
         .from(UserProperties.TABLE)
-        .leftJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId))
-        .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new OrderBy(UserProperties.userId, true)))
+        .orWhere(UserProperties.userId.eq(1))
+        .limit(1);
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name FROM user u WHERE u.user_id = ? LIMIT ?, ?",
+        Arrays.asList(
+                UserProperties.userId.value(1),
+                getStartColumn().value(0),
+                getLimitColumn().value(1)
+        ),
+        sql.getPrepareStatement());
+
+sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name
+                )
+        ).from(UserProperties.TABLE)
+        .orWhere(
+                Criteria.ands(
+                        Arrays.asList(
+                                UserProperties.name.like("小%"),
+                                UserProperties.email.like("xiao%")
+                        )
+                )
+        )
+        .limit(1);
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? AND u.email LIKE ?) LIMIT ?, ?",
+        Arrays.asList(
+                UserProperties.name.value("小%"),
+                UserProperties.email.value("xiao%"),
+                getStartColumn().value(0),
+                getLimitColumn().value(1)
+        ),
+        sql.getPrepareStatement());
+```
+
+### where 支持flag条件
+
+```
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name
+                )
+        )
+        .from(UserProperties.TABLE)
+        .andWhere(UserProperties.userId.noFlgs(1));
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name FROM user u WHERE u.user_id & ? = 0",
+        Collections.singletonList(
+                UserProperties.userId.value(1)
+        ),
+        sql.getPrepareStatement());
+        
+// Column 还有 allFlgs(), anyFlgs()方法
+...              
+```
+
+### order by
+
+```
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name,
+                        ProjectProperties.name)
+        )
+        .from(UserProperties.TABLE)
+        .leftJoinOn(
+                ProjectProperties.TABLE,
+                Arrays.asList(
+                        UserProperties.currentProjectId,
+                        ProjectProperties.projectId)
+        )
+        .orderBy(
+                Arrays.asList(
+                        ProjectProperties.projectId.orderBy(),
+                        UserProperties.userId.orderBy(true)
+                ))
         .limit(1000);
-assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id, u.user_id DESC LIMIT ?, ?",
-        Arrays.asList("$start", 0, "$limit", 1000), sql.getSqlParams());
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id, u.user_id DESC LIMIT ?, ?",
+        Arrays.asList(
+                getStartColumn().value(0),
+                getLimitColumn().value(1000)
+        ),
+        sql.getPrepareStatement());
 ```
 
-### customerOrderBy（自定义排序：mysql语法）
+### 自定义order by（mysql语法）
 
 ```
-Sql sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
-        .from(UserProperties.TABLE)
-        .leftJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId))
-        .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new CustomOrderBy(UserProperties.userId, Arrays.asList(1, 2, 3), true)));
-assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
-        + ", FIELD(u.user_id, ?, ?, ?) DESC", Arrays.asList("u.user_id", 1, "u.user_id", 2, "u.user_id", 3), sql.getSqlParams());
-```
-
-### nameOrderBy（自定义字段排序）
-
-```
-Sql sql = new Sql()
-        .select(
+SearchSql sql = SqlFactory.createSearch()
+        .column(
                 Arrays.asList(
-                        new MinColumn(UserProperties.age, "min_age"),
-                        new MaxColumn(UserProperties.age, "max_age"),
+                        UserProperties.userId,
+                        UserProperties.name,
+                        ProjectProperties.name)
+        )
+        .from(UserProperties.TABLE)
+        .leftJoinOn(
+                ProjectProperties.TABLE,
+                Arrays.asList(
+                        UserProperties.currentProjectId,
+                        ProjectProperties.projectId
+                )
+        )
+        .orderBy(
+                Arrays.asList(
+                        ProjectProperties.projectId.orderBy(),
+                        UserProperties.userId.customerOrderBy(Arrays.asList(1, 2, 3), true)
+                )
+        );
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
+                + ", FIELD(u.user_id, ?, ?, ?) DESC",
+        Arrays.asList(
+                UserProperties.userId.value(1),
+                UserProperties.userId.value(2),
+                UserProperties.userId.value(3)
+        ),
+        sql.getPrepareStatement());
+```
+
+### 聚合列 order by
+
+```
+AggregateColumn minAge = UserProperties.age.min("min_age");
+AggregateColumn maxAge = UserProperties.age.max("max_age");
+
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        minAge,
+                        maxAge,
                         UserProperties.gender
                 ))
         .from(UserProperties.TABLE)
-        .andWhere(CriteriaItemMaker.greaterThanOrEqualsTo(UserProperties.age, 0))
-        .groupBy(UserProperties.gender)
-        .having(Having.and(HavingItemMaker.greaterThanOrEqualsTo("min_age", 1)))
-        .orderBy(Arrays.asList(
-                new OrderBy(UserProperties.gender),
-                new NameOrderBy("min_age", true)));
-assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? " +
-        "GROUP BY u.gender HAVING min_age >= ? ORDER BY u.gender, min_age DESC", Arrays.asList("u.age", 0, "min_age", 1), sql.getSqlParams());
-```
-
-### groupBy & having
-
-```
-Sql sql = new Sql()
-        .select(
-                Arrays.asList(
-                        new MinColumn(UserProperties.age, "min_age"),
-                        new MaxColumn(UserProperties.age, "max_age"),
-                        UserProperties.gender
-                ))
-        .from(UserProperties.TABLE)
-        .andWhere(CriteriaItemMaker.greaterThanOrEqualsTo(UserProperties.age, 0))
-        .groupBy(UserProperties.gender)
-        .having(Having.and(HavingItemMaker.greaterThanOrEqualsTo("min_age", 1)));
-assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender HAVING min_age >= ?",
-        Arrays.asList("u.age", 0, "min_age", 1), sql.getSqlParams());
-```
-
-### andHaving & orHaving
-
-```
-// andHaving
-sql = new Sql()
-        .select(
-                Arrays.asList(
-                        new MinColumn(UserProperties.age, "min_age"),
-                        new MaxColumn(UserProperties.age, "max_age"),
-                        UserProperties.gender
-                ))
-        .from(UserProperties.TABLE)
-        .andWhere(CriteriaItemMaker.greaterThanOrEqualsTo(UserProperties.age, 0))
+        .andWhere(UserProperties.age.egt(0))
         .groupBy(UserProperties.gender)
         .andHaving(
-                Having.ors(
-                        Arrays.asList(
-                                HavingItemMaker.greaterThanOrEqualsTo("min_age", 1),
-                                HavingItemMaker.greaterThanOrEqualsTo("max_age", 2))
+                minAge.egt(1)
+        )
+        .orderBy(
+                Arrays.asList(
+                        UserProperties.gender.orderBy(),
+                        minAge.orderBy(true)
+                )
+        );
+assertPrepareStatementEquals(
+        "SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? " +
+                "GROUP BY u.gender HAVING min_age >= ? ORDER BY u.gender, min_age DESC",
+        Arrays.asList(
+                UserProperties.age.value(0),
+                minAge.value(1)
+        ),
+        sql.getPrepareStatement());
+```
+
+### group by & having
+
+```
+AggregateColumn minAge = UserProperties.age.min("min_age");
+AggregateColumn maxAge = UserProperties.age.max("max_age");
+
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        minAge,
+                        maxAge,
+                        UserProperties.gender
                 ))
+        .from(UserProperties.TABLE)
+        .andWhere(UserProperties.age.egt(0))
+        .groupBy(UserProperties.gender)
+        .having(minAge.egt(1).and());
+assertPrepareStatementEquals(
+        "SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender HAVING min_age >= ?",
+        Arrays.asList(
+                UserProperties.age.value(0),
+                minAge.value(1)
+        ),
+        sql.getPrepareStatement());
+```
+
+### having and
+
+```
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        minAge,
+                        maxAge,
+                        UserProperties.gender
+                ))
+        .from(UserProperties.TABLE)
+        .andWhere(UserProperties.age.egt(0))
+        .groupBy(UserProperties.gender)
         .andHaving(
-                Having.ors(
+                Criteria.ors(
                         Arrays.asList(
-                                HavingItemMaker.greaterThanOrEqualsTo("min_age", 3),
-                                HavingItemMaker.greaterThanOrEqualsTo("max_age", 4)
+                                minAge.egt(1),
+                                maxAge.egt(2)
+                        )
+                )
+        )
+        .andHaving(
+                Criteria.ors(
+                        Arrays.asList(
+                                minAge.egt(3),
+                                maxAge.egt(4)
                         ))
         );
-assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
+assertPrepareStatementEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
                 + "HAVING (min_age >= ? OR max_age >= ?) AND (min_age >= ? OR max_age >= ?)",
-        Arrays.asList("u.age", 0, "min_age", 1, "max_age", 2, "min_age", 3, "max_age", 4), sql.getSqlParams());
+        Arrays.asList(
+                UserProperties.age.value(0),
+                minAge.value(1),
+                maxAge.value(2),
+                minAge.value(3),
+                maxAge.value(4)
+        ),
+        sql.getPrepareStatement());
+```
 
+### having or
 
-// orHaving
-sql = new Sql()
-        .select(
+```
+SearchSql sql = SqlFactory.createSearch()
+        .column(
                 Arrays.asList(
-                        new MinColumn(UserProperties.age, "min_age"),
-                        new MaxColumn(UserProperties.age, "max_age"),
+                        UserProperties.age.min("min_age"),
+                        UserProperties.age.max("max_age"),
                         UserProperties.gender
                 ))
         .from(UserProperties.TABLE)
-        .andWhere(CriteriaItemMaker.greaterThanOrEqualsTo(UserProperties.age, 0))
+        .andWhere(UserProperties.age.egt(0))
         .groupBy(UserProperties.gender)
         .orHaving(
-                Having.ands(
+                Criteria.ands(
                         Arrays.asList(
-                                HavingItemMaker.greaterThanOrEqualsTo("min_age", 1),
-                                HavingItemMaker.greaterThanOrEqualsTo("max_age", 2))
-                ))
+                                minAge.egt(1),
+                                maxAge.egt(2)
+                        )
+                )
+        )
         .orHaving(
-                Having.ands(
+                Criteria.ands(
                         Arrays.asList(
-                                HavingItemMaker.greaterThanOrEqualsTo("min_age", 3),
-                                HavingItemMaker.greaterThanOrEqualsTo("max_age", 4)
+                                minAge.egt(3),
+                                maxAge.egt(4)
                         ))
         );
-assertParamsEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
+assertPrepareStatementEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_age, u.gender FROM user u WHERE u.age >= ? GROUP BY u.gender "
                 + "HAVING (min_age >= ? AND max_age >= ?) OR (min_age >= ? AND max_age >= ?)",
-        Arrays.asList("u.age", 0, "min_age", 1, "max_age", 2, "min_age", 3, "max_age", 4), sql.getSqlParams());
+        Arrays.asList(
+                UserProperties.age.value(0),
+                minAge.value(1),
+                maxAge.value(2),
+                minAge.value(3),
+                maxAge.value(4)
+        ),
+        sql.getPrepareStatement());
 
 ```
 
 ### limit
 
 ```
-Sql sql = new Sql()
-        .select(Arrays.asList(UserProperties.userId, UserProperties.name, ProjectProperties.name))
+SearchSql sql = SqlFactory.createSearch()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        UserProperties.name,
+                        ProjectProperties.name
+                )
+        )
         .from(UserProperties.TABLE)
-        .leftJoinOn(ProjectProperties.TABLE, Arrays.asList(UserProperties.currentProjectId, ProjectProperties.projectId))
-        .orderBy(Arrays.asList(new OrderBy(ProjectProperties.projectId), new OrderBy(UserProperties.userId, true)))
+        .leftJoinOn(
+                ProjectProperties.TABLE,
+                Arrays.asList(
+                        UserProperties.currentProjectId,
+                        ProjectProperties.projectId
+                )
+        )
+        .orderBy(
+                Arrays.asList(
+                        ProjectProperties.projectId.orderBy(),
+                        UserProperties.userId.orderBy(true)
+                )
+        )
         .limit(10);
-assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
-        + ", u.user_id DESC LIMIT ?, ?", Arrays.asList("$start", 0, "$limit", 10), sql.getSqlParams());
+assertPrepareStatementEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN project p ON u.current_project_id = p.project_id ORDER BY p.project_id"
+                + ", u.user_id DESC LIMIT ?, ?",
+        Arrays.asList(
+                getStartColumn().value(0),
+                getLimitColumn().value(10)
+        ),
+        sql.getPrepareStatement());
 ```
 
-## StringSql构造
+## 其他说明
 
-构造方式与Sql相似，可以查看：`tech.ibit.sqlbuilder.StringSqlTest`
+`tech.ibit.sqlbuilder.Column`
+
+```
+@Getter
+@Setter
+@AllArgsConstructor
+public class Column implements IColumn,
+        IColumnCriteriaItemBuilder, IColumnAggregateBuilder, IColumnSetItemBuilder, IColumnOrderByBuilder { 
+
+     // 省略实现代码
+     ...
+     
+}
+```
+
+实现了多个接口支持快速通过类创建`where语句`、`聚合函数`、`set语句`和`order by语句`。
+
 
 ## 相关maven依赖包
 
@@ -479,7 +1020,7 @@ assertParamsEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT JOIN proje
 <dependency>
   <groupId>tech.ibit</groupId>
   <artifactId>sql-builder</artifactId>
-  <version>1.1</version>
+  <version>2.x</version>
 </dependency>
 ```
 

@@ -113,7 +113,7 @@ public class DaoUtilsTest extends CommonTest {
     public void deleteByIds() {
         PrepareStatement prepareStatement = DaoUtils.deleteByIds(User.class, Arrays.asList(1, 2));
         assertPrepareStatementEquals(
-                "DELETE u.* FROM user u WHERE u.user_id IN(?, ?)",
+                "DELETE FROM user WHERE user_id IN(?, ?)",
                 Arrays.asList(
                         UserProperties.userId.value(1),
                         UserProperties.userId.value(2)
@@ -121,7 +121,7 @@ public class DaoUtilsTest extends CommonTest {
 
         prepareStatement = DaoUtils.deleteByIds(User.class, Collections.singletonList(1));
         assertPrepareStatementEquals(
-                "DELETE u.* FROM user u WHERE u.user_id = ?",
+                "DELETE FROM user WHERE user_id = ?",
                 Collections.singletonList(
                         UserProperties.userId.value(1)
                 ), prepareStatement);
@@ -131,7 +131,7 @@ public class DaoUtilsTest extends CommonTest {
     public void deleteById() {
         PrepareStatement prepareStatement = DaoUtils.deleteById(User.class, 1);
         assertPrepareStatementEquals(
-                "DELETE u.* FROM user u WHERE u.user_id = ?",
+                "DELETE FROM user WHERE user_id = ?",
                 Collections.singletonList(
                         UserProperties.userId.value(1)
                 ), prepareStatement);
@@ -144,14 +144,14 @@ public class DaoUtilsTest extends CommonTest {
 
         PrepareStatement prepareStatement = DaoUtils.deleteByMultiIds(Collections.singletonList(uKey1));
         assertPrepareStatementEquals(
-                "DELETE u.* FROM user u WHERE u.user_id = ?",
+                "DELETE FROM user WHERE user_id = ?",
                 Collections.singletonList(
                         UserProperties.userId.value(1)
                 ), prepareStatement);
 
         prepareStatement = DaoUtils.deleteByMultiIds(Arrays.asList(uKey1, uKey2));
         assertPrepareStatementEquals(
-                "DELETE u.* FROM user u WHERE u.user_id IN(?, ?)",
+                "DELETE FROM user WHERE user_id IN(?, ?)",
                 Arrays.asList(
                         UserProperties.userId.value(1),
                         UserProperties.userId.value(2)
@@ -162,7 +162,7 @@ public class DaoUtilsTest extends CommonTest {
 
         prepareStatement = DaoUtils.deleteByMultiIds(Collections.singletonList(oKey1));
         assertPrepareStatementEquals(
-                "DELETE o.* FROM organization o WHERE (o.city_code = ? AND o.name = ?)",
+                "DELETE FROM organization WHERE (city_code = ? AND name = ?)",
                 Arrays.asList(
                         OrganizationProperties.cityCode.value("001"),
                         OrganizationProperties.name.value("001")
@@ -170,7 +170,7 @@ public class DaoUtilsTest extends CommonTest {
 
         prepareStatement = DaoUtils.deleteByMultiIds(Arrays.asList(oKey1, oKey2));
         assertPrepareStatementEquals(
-                "DELETE o.* FROM organization o WHERE (o.city_code = ? AND o.name = ?) OR (o.city_code = ? AND o.name = ?)",
+                "DELETE FROM organization WHERE (city_code = ? AND name = ?) OR (city_code = ? AND name = ?)",
                 Arrays.asList(
                         OrganizationProperties.cityCode.value("001"),
                         OrganizationProperties.name.value("001"),
@@ -184,7 +184,7 @@ public class DaoUtilsTest extends CommonTest {
         UserMultiId uKey1 = new UserMultiId(1);
         PrepareStatement prepareStatement = DaoUtils.deleteByMultiId(uKey1);
         assertPrepareStatementEquals(
-                "DELETE u.* FROM user u WHERE u.user_id = ?",
+                "DELETE FROM user WHERE user_id = ?",
                 Collections.singletonList(
                         UserProperties.userId.value(1)
                 ), prepareStatement);
@@ -192,7 +192,7 @@ public class DaoUtilsTest extends CommonTest {
         OrganizationMultiId oKey1 = new OrganizationMultiId("001", "001");
         prepareStatement = DaoUtils.deleteByMultiId(oKey1);
         assertPrepareStatementEquals(
-                "DELETE o.* FROM organization o WHERE (o.city_code = ? AND o.name = ?)",
+                "DELETE FROM organization WHERE (city_code = ? AND name = ?)",
                 Arrays.asList(
                         OrganizationProperties.cityCode.value("001"),
                         OrganizationProperties.name.value("001")

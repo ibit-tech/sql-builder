@@ -148,7 +148,7 @@ public class SqlTest extends CommonTest {
                 .deleteFrom(UserProperties.TABLE)
                 .andWhere(UserProperties.userId.eq(1));
         assertPrepareStatementEquals(
-                "DELETE u.* FROM user u WHERE u.user_id = ?",
+                "DELETE FROM user WHERE user_id = ?",
                 Collections.singletonList(
                         UserProperties.userId.value(1)
                 ),
@@ -159,7 +159,7 @@ public class SqlTest extends CommonTest {
                 .from(UserProperties.TABLE)
                 .andWhere(UserProperties.userId.eq(1));
         assertPrepareStatementEquals(
-                "DELETE u.* FROM user u WHERE u.user_id = ?",
+                "DELETE FROM user WHERE user_id = ?",
                 Collections.singletonList(
                         UserProperties.userId.value(1)
                 ),

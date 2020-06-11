@@ -3,8 +3,8 @@ package tech.ibit.sqlbuilder.sql.impl;
 import lombok.Getter;
 import tech.ibit.sqlbuilder.*;
 import tech.ibit.sqlbuilder.exception.SqlException;
-import tech.ibit.sqlbuilder.sql.field.ListField;
 import tech.ibit.sqlbuilder.sql.DeleteSql;
+import tech.ibit.sqlbuilder.sql.field.ListField;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,7 +47,16 @@ public class DeleteSqlImpl implements DeleteSql {
 
     @Override
     public boolean isUseAlias() {
-        return true;
+        return isMultiTables();
+    }
+
+    /**
+     * 是否关联多张表
+     *
+     * @return 关联多张表
+     */
+    private boolean isMultiTables() {
+        return from.getItems().size() > 1 || joinOn.getItems().size() > 0;
     }
 
     @Override
@@ -60,10 +69,13 @@ public class DeleteSqlImpl implements DeleteSql {
         List<ColumnValue> values = new ArrayList<>();
 
         boolean useAlias = isUseAlias();
+        boolean multiTables = isMultiTables();
+
+        prepareSql.append("DELETE");
 
         append(
                 Arrays.asList(
-                        getDeleteItemPrepareStatement(useAlias),
+                        getDeleteItemPrepareStatement(multiTables),
                         getFromPrepareStatement(useAlias),
                         getJoinOnPrepareStatement(useAlias),
                         getWherePrepareStatement(useAlias)

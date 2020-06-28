@@ -4,9 +4,9 @@ import lombok.Getter;
 import org.apache.commons.lang.StringUtils;
 import tech.ibit.sqlbuilder.*;
 import tech.ibit.sqlbuilder.exception.SqlException;
+import tech.ibit.sqlbuilder.sql.CountSql;
 import tech.ibit.sqlbuilder.sql.field.BooleanField;
 import tech.ibit.sqlbuilder.sql.field.ListField;
-import tech.ibit.sqlbuilder.sql.CountSql;
 
 import java.util.ArrayList;
 import java.util.Arrays;

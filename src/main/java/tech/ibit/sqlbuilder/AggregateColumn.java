@@ -3,7 +3,6 @@ package tech.ibit.sqlbuilder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.apache.commons.lang.ArrayUtils;
-import tech.ibit.sqlbuilder.IColumn;
 import tech.ibit.sqlbuilder.builder.IColumnCriteriaItemBuilder;
 import tech.ibit.sqlbuilder.builder.IColumnOrderByBuilder;
 

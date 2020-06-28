@@ -5,8 +5,8 @@ import tech.ibit.sqlbuilder.Column;
 import tech.ibit.sqlbuilder.ColumnValue;
 import tech.ibit.sqlbuilder.PrepareStatement;
 import tech.ibit.sqlbuilder.Table;
-import tech.ibit.sqlbuilder.sql.field.ListField;
 import tech.ibit.sqlbuilder.sql.InsertSql;
+import tech.ibit.sqlbuilder.sql.field.ListField;
 
 import java.util.ArrayList;
 import java.util.Arrays;

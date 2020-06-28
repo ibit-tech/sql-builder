@@ -2,10 +2,10 @@ package tech.ibit.sqlbuilder.sql.impl;
 
 import lombok.Getter;
 import tech.ibit.sqlbuilder.*;
+import tech.ibit.sqlbuilder.sql.SearchSql;
 import tech.ibit.sqlbuilder.sql.field.BooleanField;
 import tech.ibit.sqlbuilder.sql.field.LimitField;
 import tech.ibit.sqlbuilder.sql.field.ListField;
-import tech.ibit.sqlbuilder.sql.SearchSql;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -3,8 +3,8 @@ package tech.ibit.sqlbuilder.sql.impl;
 import lombok.Getter;
 import tech.ibit.sqlbuilder.*;
 import tech.ibit.sqlbuilder.exception.SqlException;
-import tech.ibit.sqlbuilder.sql.field.ListField;
 import tech.ibit.sqlbuilder.sql.UpdateSql;
+import tech.ibit.sqlbuilder.sql.field.ListField;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,8 +1,8 @@
 package tech.ibit.sqlbuilder.sql.support;
 
-import tech.ibit.sqlbuilder.converter.EntityConverter;
 import tech.ibit.sqlbuilder.IColumn;
 import tech.ibit.sqlbuilder.PrepareStatement;
+import tech.ibit.sqlbuilder.converter.EntityConverter;
 import tech.ibit.sqlbuilder.sql.field.ListField;
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
 

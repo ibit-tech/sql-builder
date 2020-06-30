@@ -17,4 +17,11 @@ public interface CountSql extends ColumnSupport<CountSql>,
         WhereSupport<CountSql>,
         UseAliasSupport {
 
+    /**
+     * 转换为 SearchSql
+     *
+     * @return SearchSql对象
+     */
+    SearchSql toSearchSql();
+
 }

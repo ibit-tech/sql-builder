@@ -1,10 +1,12 @@
 package tech.ibit.sqlbuilder.sql.impl;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
 import tech.ibit.sqlbuilder.*;
 import tech.ibit.sqlbuilder.exception.SqlException;
 import tech.ibit.sqlbuilder.sql.CountSql;
+import tech.ibit.sqlbuilder.sql.SearchSql;
 import tech.ibit.sqlbuilder.sql.field.BooleanField;
 import tech.ibit.sqlbuilder.sql.field.ListField;
 
@@ -19,6 +21,7 @@ import java.util.List;
  * @version 2.0
  */
 @Getter
+@Setter
 public class CountSqlImpl implements CountSql {
 
 
@@ -103,4 +106,16 @@ public class CountSqlImpl implements CountSql {
     }
 
 
+    @Override
+    public SearchSql toSearchSql() {
+        SearchSqlImpl searchSql = new SearchSqlImpl();
+        searchSql.setDistinct(distinct);
+        searchSql.setFrom(from);
+        searchSql.setJoinOn(joinOn);
+        searchSql.setWhere(where);
+        searchSql.setGroupBy(groupBy);
+        searchSql.setHaving(having);
+        searchSql.setColumn(column);
+        return searchSql;
+    }
 }

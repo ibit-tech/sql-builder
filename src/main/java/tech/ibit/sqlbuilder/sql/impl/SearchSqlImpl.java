@@ -1,7 +1,9 @@
 package tech.ibit.sqlbuilder.sql.impl;
 
 import lombok.Getter;
+import lombok.Setter;
 import tech.ibit.sqlbuilder.*;
+import tech.ibit.sqlbuilder.sql.CountSql;
 import tech.ibit.sqlbuilder.sql.SearchSql;
 import tech.ibit.sqlbuilder.sql.field.BooleanField;
 import tech.ibit.sqlbuilder.sql.field.LimitField;
@@ -18,6 +20,7 @@ import java.util.List;
  * @version 2.0
  */
 @Getter
+@Setter
 public class SearchSqlImpl implements SearchSql {
 
 
@@ -106,5 +109,16 @@ public class SearchSqlImpl implements SearchSql {
         return new PrepareStatement(prepareSql.toString(), values);
     }
 
-
+    @Override
+    public CountSql toCountSql() {
+        CountSqlImpl countSql = new CountSqlImpl();
+        countSql.setDistinct(distinct);
+        countSql.setFrom(from);
+        countSql.setJoinOn(joinOn);
+        countSql.setWhere(where);
+        countSql.setGroupBy(groupBy);
+        countSql.setHaving(having);
+        countSql.setColumn(column);
+        return countSql;
+    }
 }

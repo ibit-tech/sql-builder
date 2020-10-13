@@ -16,7 +16,7 @@
         <gpg.skip>false</gpg.skip>
         <javadoc.skip>false</javadoc.skip>
         <common-lang.version>2.6</common-lang.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <lombok.version>1.16.20</lombok.version>
     </properties>
 

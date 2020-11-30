@@ -1,27 +1,17 @@
 package tech.ibit.sqlbuilder.sql.support;
 
+import tech.ibit.sqlbuilder.IColumn;
 import tech.ibit.sqlbuilder.IOrderBy;
-import tech.ibit.sqlbuilder.PrepareStatement;
-import tech.ibit.sqlbuilder.sql.field.ListField;
-import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
  * OrderBy Support
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 2.0
  */
-public interface OrderBySupport<T> extends SqlSupport<T>, PrepareStatementSupport {
-
-    /**
-     * Order by
-     *
-     * @return Order by
-     */
-    ListField<IOrderBy> getOrderBy();
+public interface OrderBySupport<T> {
 
 
     /**
@@ -31,10 +21,7 @@ public interface OrderBySupport<T> extends SqlSupport<T>, PrepareStatementSuppor
      * @return SQL对象
      * @see IOrderBy
      */
-    default T orderBy(IOrderBy orderBy) {
-        getOrderBy().addItem(orderBy);
-        return getSql();
-    }
+    T orderBy(IOrderBy orderBy);
 
     /**
      * `ORDER BY` 语句
@@ -43,24 +30,24 @@ public interface OrderBySupport<T> extends SqlSupport<T>, PrepareStatementSuppor
      * @return SQL对象
      * @see IOrderBy
      */
-    default T orderBy(List<IOrderBy> orderBys) {
-        getOrderBy().addItems(orderBys);
-        return getSql();
-    }
+    T orderBy(List<IOrderBy> orderBys);
 
     /**
-     * 获取预查询SQL对象
+     * `ORDER BY` 语句
      *
-     * @param useAlias 是否使用别名
-     * @return 预查询SQL对象
+     * @param column orderBy列
+     * @return SQL对象
      */
-    default PrepareStatement getOrderByPrepareStatement(boolean useAlias) {
-        List<IOrderBy> orderBys = getOrderBy().getItems();
-        if (CollectionUtils.isEmpty(orderBys)) {
-            return new PrepareStatement("", Collections.emptyList());
-        }
-        return getPrepareStatement(" ORDER BY ", orderBys, ", ", useAlias);
-    }
+    T orderBy(IColumn column);
 
+
+    /**
+     * `ORDER BY` 语句
+     *
+     * @param column orderBy列
+     * @param desc   是否倒序
+     * @return SQL对象
+     */
+    T orderBy(IColumn column, boolean desc);
 
 }

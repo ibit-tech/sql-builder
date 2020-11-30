@@ -5,7 +5,7 @@ import org.apache.commons.lang.StringUtils;
 /**
  * 定义列接口
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
 public interface IColumn {

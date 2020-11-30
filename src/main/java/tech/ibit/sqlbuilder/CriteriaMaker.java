@@ -3,7 +3,7 @@ package tech.ibit.sqlbuilder;
 /**
  * 条件内容字串创建类
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
 public class CriteriaMaker {

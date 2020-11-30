@@ -1,6 +1,6 @@
 package tech.ibit.sqlbuilder.sql.field;
 
-import lombok.Data;
+
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
 import java.util.ArrayList;
@@ -9,12 +9,14 @@ import java.util.List;
 /**
  * 定义列表字段
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 2.0
  */
-@Data
 public class ListField<T> {
 
+    /**
+     * 列表值
+     */
     private List<T> items = new ArrayList<>();
 
 
@@ -38,4 +40,23 @@ public class ListField<T> {
         }
     }
 
+
+    /**
+     * Gets the value of items
+     *
+     * @return the value of items
+     */
+    public List<T> getItems() {
+        return items;
+    }
+
+    /**
+     * Sets the items
+     * <p>You can use getItems() to get the value of items</p>
+     *
+     * @param items items
+     */
+    public void setItems(List<T> items) {
+        this.items = items;
+    }
 }

@@ -1,34 +1,37 @@
 package tech.ibit.sqlbuilder;
 
-import lombok.experimental.UtilityClass;
 import tech.ibit.sqlbuilder.sql.*;
 import tech.ibit.sqlbuilder.sql.impl.*;
 
 /**
  * SqlFactory
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 2.0
  */
-@UtilityClass
 public class SqlFactory {
+
+    /**
+     * 构造函数
+     */
+    private SqlFactory() {
+    }
 
     /**
      * 创建搜索
      *
      * @return 搜索sql
      */
-    public SearchSql createSearch() {
-        return new SearchSqlImpl();
+    public static QuerySql createQuery() {
+        return new QuerySqlImpl();
     }
-
 
     /**
      * 创建计数
      *
      * @return 计数sql
      */
-    public CountSql createCount() {
+    public static CountSql createCount() {
         return new CountSqlImpl();
     }
 
@@ -37,7 +40,7 @@ public class SqlFactory {
      *
      * @return 删除sql
      */
-    public DeleteSql createDelete() {
+    public static DeleteSql createDelete() {
         return new DeleteSqlImpl();
     }
 
@@ -46,7 +49,7 @@ public class SqlFactory {
      *
      * @return 插入sql
      */
-    public InsertSql createInsert() {
+    public static InsertSql createInsert() {
         return new InsertSqlImpl();
     }
 
@@ -55,7 +58,7 @@ public class SqlFactory {
      *
      * @return 更新sql
      */
-    public UpdateSql createUpdate() {
+    public static UpdateSql createUpdate() {
         return new UpdateSqlImpl();
     }
 

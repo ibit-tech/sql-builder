@@ -1,6 +1,5 @@
 package tech.ibit.sqlbuilder;
 
-import lombok.Data;
 import tech.ibit.sqlbuilder.enums.CriteriaLogicalEnum;
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
@@ -11,10 +10,9 @@ import java.util.List;
 /**
  * 查询条件（where 或 having）
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
-@Data
 public class Criteria implements PrepareStatementSupplier {
 
     /**
@@ -102,7 +100,7 @@ public class Criteria implements PrepareStatementSupplier {
      * @return OR条件列表
      */
     @SuppressWarnings("unchecked")
-    public static List<Criteria> ors(List items) {
+    public static List<Criteria> ors(List<?> items) {
         if (null == items || items.isEmpty()) {
             return Collections.emptyList();
         }
@@ -125,7 +123,7 @@ public class Criteria implements PrepareStatementSupplier {
      * @return AND条件列表
      */
     @SuppressWarnings("unchecked")
-    public static List<Criteria> ands(List items) {
+    public static List<Criteria> ands(List<?> items) {
         if (null == items || items.isEmpty()) {
             return Collections.emptyList();
         }
@@ -140,19 +138,13 @@ public class Criteria implements PrepareStatementSupplier {
         return criterion;
     }
 
-    /**
-     * 获取预查询SQL对象
-     *
-     * @param useAlias 是否使用别名
-     * @return 预查询SQL对象
-     */
     @Override
     public PrepareStatement getPrepareStatement(boolean useAlias) {
         if (null == item && CollectionUtils.isEmpty(subCriterion)) {
             return null;
         }
         StringBuilder whereSql = new StringBuilder();
-        List<ColumnValue> whereParams = new ArrayList<>();
+        List<tech.ibit.sqlbuilder.ColumnValue> whereParams = new ArrayList<>();
         appendCriteria(this, whereSql, whereParams, useAlias);
         return new PrepareStatement(whereSql.toString(), whereParams);
     }
@@ -192,5 +184,62 @@ public class Criteria implements PrepareStatementSupplier {
                 criteriaSql.append(")");
             }
         }
+    }
+
+    /**
+     * Gets the value of logical
+     *
+     * @return the value of logical
+     */
+    public CriteriaLogicalEnum getLogical() {
+        return logical;
+    }
+
+    /**
+     * Sets the logical
+     * <p>You can use getLogical() to get the value of logical</p>
+     *
+     * @param logical logical
+     */
+    public void setLogical(CriteriaLogicalEnum logical) {
+        this.logical = logical;
+    }
+
+    /**
+     * Gets the value of item
+     *
+     * @return the value of item
+     */
+    public CriteriaItem getItem() {
+        return item;
+    }
+
+    /**
+     * Sets the item
+     * <p>You can use getItem() to get the value of item</p>
+     *
+     * @param item item
+     */
+    public void setItem(CriteriaItem item) {
+        this.item = item;
+    }
+
+    /**
+     * Gets the value of subCriterion
+     *
+     * @return the value of subCriterion
+     */
+    public List<Criteria> getSubCriterion() {
+        return subCriterion;
+    }
+
+    /**
+     * Sets the subCriterion
+     * <p>You can use getSubCriterion() to get the value of subCriterion</p>
+     *
+     * @param subCriterion subCriterion
+     */
+    public void setSubCriterion(List<Criteria> subCriterion) {
+        this.subCriterion = subCriterion;
     }
 }

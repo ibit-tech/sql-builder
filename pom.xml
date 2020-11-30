@@ -16,8 +16,9 @@
         <gpg.skip>false</gpg.skip>
         <javadoc.skip>false</javadoc.skip>
         <common-lang.version>2.6</common-lang.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <lombok.version>1.16.20</lombok.version>
+        <test.fastjson.version>1.2.68</test.fastjson.version>
     </properties>
 
     <name>sql-builder</name>

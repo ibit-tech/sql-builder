@@ -1,23 +1,49 @@
 package tech.ibit.sqlbuilder.sql.field;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
  * Distinct 字段
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 2.0
  */
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class BooleanField {
 
     /**
-     * 是否
+     * boolean 值
      */
     private boolean value;
 
+    /**
+     * 构造函数
+     */
+    public BooleanField() {
+    }
+
+    /**
+     * 构造函数
+     *
+     * @param value boolean 值
+     */
+    public BooleanField(boolean value) {
+        this.value = value;
+    }
+
+    /**
+     * Gets the value of value
+     *
+     * @return the value of value
+     */
+    public boolean isValue() {
+        return value;
+    }
+
+    /**
+     * Sets the value
+     * <p>You can use getValue() to get the value of value</p>
+     *
+     * @param value value
+     */
+    public void setValue(boolean value) {
+        this.value = value;
+    }
 }

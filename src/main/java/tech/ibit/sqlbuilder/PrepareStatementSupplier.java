@@ -4,7 +4,7 @@ package tech.ibit.sqlbuilder;
 /**
  * PrepareStatement 生产者
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 2.0
  */
 public interface PrepareStatementSupplier {

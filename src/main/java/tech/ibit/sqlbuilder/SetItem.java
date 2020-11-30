@@ -1,7 +1,5 @@
 package tech.ibit.sqlbuilder;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import tech.ibit.sqlbuilder.enums.SetItemTypeEnum;
 
 import java.util.Collections;
@@ -9,28 +7,38 @@ import java.util.Collections;
 /**
  * 设置项
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 2.0
  */
-@Getter
-@AllArgsConstructor
 public class SetItem implements PrepareStatementSupplier {
 
     /**
      * 设置列
      */
-    private Column column;
+    private final Column column;
 
     /**
      * 设置值
      */
-    private Object value;
+    private final Object value;
 
     /**
      * 设置类型
      */
-    private SetItemTypeEnum type;
+    private final SetItemTypeEnum type;
 
+    /**
+     * 设置对象
+     *
+     * @param column 列
+     * @param value  值
+     * @param type   类型
+     */
+    public SetItem(Column column, Object value, SetItemTypeEnum type) {
+        this.column = column;
+        this.value = value;
+        this.type = type;
+    }
 
     /**
      * 设置具体值
@@ -89,5 +97,32 @@ public class SetItem implements PrepareStatementSupplier {
             default:
                 return null;
         }
+    }
+
+    /**
+     * Gets the value of column
+     *
+     * @return the value of column
+     */
+    public Column getColumn() {
+        return column;
+    }
+
+    /**
+     * Gets the value of value
+     *
+     * @return the value of value
+     */
+    public Object getValue() {
+        return value;
+    }
+
+    /**
+     * Gets the value of type
+     *
+     * @return the value of type
+     */
+    public SetItemTypeEnum getType() {
+        return type;
     }
 }

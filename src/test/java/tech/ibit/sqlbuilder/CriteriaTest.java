@@ -4,12 +4,13 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import tech.ibit.sqlbuilder.demo.entity.property.UserProperties;
 
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
 public class CriteriaTest {

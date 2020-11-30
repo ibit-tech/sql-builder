@@ -1,66 +1,118 @@
 package tech.ibit.sqlbuilder.sql.impl;
 
-import lombok.Getter;
-import tech.ibit.sqlbuilder.Column;
-import tech.ibit.sqlbuilder.ColumnValue;
-import tech.ibit.sqlbuilder.PrepareStatement;
-import tech.ibit.sqlbuilder.Table;
+import tech.ibit.sqlbuilder.*;
+import tech.ibit.sqlbuilder.exception.SqlException;
 import tech.ibit.sqlbuilder.sql.InsertSql;
-import tech.ibit.sqlbuilder.sql.field.ListField;
+import tech.ibit.sqlbuilder.sql.support.UseAliasSupport;
+import tech.ibit.sqlbuilder.sql.support.impl.InsertTableSupportImpl;
+import tech.ibit.sqlbuilder.sql.support.impl.OnDuplicateKeyUpdateSupportImpl;
+import tech.ibit.sqlbuilder.sql.support.impl.PrepareStatementBuildSupport;
+import tech.ibit.sqlbuilder.sql.support.impl.ValuesSupportImpl;
+import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * InsertSqlImpl
+ * InsertSql实现
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 2.0
  */
-@Getter
-public class InsertSqlImpl implements InsertSql {
+public class InsertSqlImpl implements InsertSql,
+        UseAliasSupport, PrepareStatementBuildSupport {
 
     /**
-     * from
+     * insert table 支持
      */
-    private ListField<Table> insertTable = new ListField<>();
+    private final InsertTableSupportImpl<InsertSql> insertTableSupport;
 
     /**
-     * column
+     * value 支持
      */
-    private ListField<Column> column = new ListField<>();
+    private final ValuesSupportImpl<InsertSql> valuesSupport;
 
     /**
-     * value
+     * on duplicate key update 支持
      */
-    private ListField<Object> value = new ListField<>();
+    private final OnDuplicateKeyUpdateSupportImpl<InsertSql> onDuplicateKeyUpdateSupport;
 
+
+    public InsertSqlImpl() {
+        this.insertTableSupport = new InsertTableSupportImpl<>(this);
+        this.valuesSupport = new ValuesSupportImpl<>(this);
+        this.onDuplicateKeyUpdateSupport = new OnDuplicateKeyUpdateSupportImpl<>(this);
+    }
+
+    @Override
+    public InsertSql insert(Table table) {
+        return insertTableSupport.insert(table);
+    }
+
+    @Override
+    public InsertSql insert(List<Table> tables) {
+        return insertTableSupport.insert(tables);
+    }
+
+    @Override
+    public InsertSql values(List<? extends ColumnValue> columnValues) {
+        return valuesSupport.values(columnValues);
+    }
+
+    @Override
+    public InsertSql values(ColumnValue columnValue) {
+        return valuesSupport.values(columnValue);
+    }
+
+    @Override
+    public InsertSql values(Column column, Object value) {
+        return valuesSupport.values(column, value);
+    }
+
+    @Override
+    public InsertSql values(List<Column> columns, List<Object> values) {
+        return valuesSupport.values(columns, values);
+    }
+
+    @Override
+    public InsertSql onDuplicateKeyUpdate(SetItem item) {
+        return onDuplicateKeyUpdateSupport.onDuplicateKeyUpdate(item);
+    }
+
+    @Override
+    public InsertSql onDuplicateKeyUpdate(List<SetItem> items) {
+        return onDuplicateKeyUpdateSupport.onDuplicateKeyUpdate(items);
+    }
 
     @Override
     public boolean isUseAlias() {
         return false;
     }
 
-    @Override
-    public InsertSql getSql() {
-        return this;
-    }
 
     @Override
     public PrepareStatement getPrepareStatement() {
+
+
+        // 没有指定表，指定默认的
+        if (CollectionUtils.isEmpty(insertTableSupport.getTable().getItems())) {
+            throw SqlException.tableNotFound();
+        }
 
         StringBuilder prepareSql = new StringBuilder();
         List<ColumnValue> values = new ArrayList<>();
 
         append(
                 Arrays.asList(
-                        getInsertPrepareStatement(isUseAlias()),
-                        getColumnPrepareStatement(),
-                        getValuePrepareStatement()
+                        insertTableSupport.getInsertPrepareStatement(isUseAlias()),
+                        valuesSupport.getColumnPrepareStatement(),
+                        valuesSupport.getValuePrepareStatement(),
+                        onDuplicateKeyUpdateSupport.getOnDuplicateKeyUpdatePrepareStatement(isUseAlias())
                 ), prepareSql, values);
 
 
         return new PrepareStatement(prepareSql.toString(), values);
     }
+
 }

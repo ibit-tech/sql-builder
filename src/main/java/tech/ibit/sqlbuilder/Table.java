@@ -1,17 +1,16 @@
 package tech.ibit.sqlbuilder;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import org.apache.commons.lang.StringUtils;
+
+import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * 表对象定义
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
-@Data
-@AllArgsConstructor
 public class Table {
 
     /**
@@ -24,6 +23,16 @@ public class Table {
      */
     private String alias;
 
+    /**
+     * 构造函数
+     *
+     * @param name  表名称
+     * @param alias 表别名
+     */
+    public Table(String name, String alias) {
+        this.name = name;
+        this.alias = alias;
+    }
 
     /**
      * 获取带别名的名称
@@ -54,13 +63,6 @@ public class Table {
         return (!userAlias || StringUtils.isBlank(alias)) ? getName() : getAlias();
     }
 
-
-    /**
-     * 重写equals方法
-     *
-     * @param o 比较对象
-     * @return 是否相等
-     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -69,21 +71,59 @@ public class Table {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-
         Table table = (Table) o;
+        return Objects.equals(getName(), table.getName())
+                && Objects.equals(getAlias(), table.getAlias());
+    }
 
-        return name.equals(table.name) && alias.equals(table.alias);
+    @Override
+    public int hashCode() {
+        return Objects.hash(getName(), getAlias());
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Table.class.getSimpleName() + "[", "]")
+                .add("name='" + name + "'")
+                .add("alias='" + alias + "'")
+                .toString();
     }
 
     /**
-     * 重写hashCode的计算
+     * Gets the value of name
      *
-     * @return hashCode
+     * @return the value of name
      */
-    @Override
-    public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + alias.hashCode();
-        return result;
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Sets the name
+     * <p>You can use getName() to get the value of name</p>
+     *
+     * @param name name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Gets the value of alias
+     *
+     * @return the value of alias
+     */
+    public String getAlias() {
+        return alias;
+    }
+
+    /**
+     * Sets the alias
+     * <p>You can use getAlias() to get the value of alias</p>
+     *
+     * @param alias alias
+     */
+    public void setAlias(String alias) {
+        this.alias = alias;
     }
 }

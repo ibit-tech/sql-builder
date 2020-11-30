@@ -1,6 +1,5 @@
 package tech.ibit.sqlbuilder;
 
-import lombok.Getter;
 import tech.ibit.sqlbuilder.enums.JoinOnTypeEnum;
 import tech.ibit.sqlbuilder.utils.CollectionUtils;
 
@@ -10,10 +9,9 @@ import java.util.List;
 /**
  * 定义JoinOn
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 2.0
  */
-@Getter
 public class JoinOn implements PrepareStatementSupplier {
 
     /**
@@ -24,22 +22,22 @@ public class JoinOn implements PrepareStatementSupplier {
     /**
      * JoinOn类型
      */
-    private JoinOnTypeEnum joinOnType;
+    private final JoinOnTypeEnum joinOnType;
 
     /**
      * join表
      */
-    private Table table;
+    private final Table table;
 
     /**
      * on列对
      */
-    private List<Column> columnPairs;
+    private final List<Column> columnPairs;
 
     /**
      * on支持条件
      */
-    private List<CriteriaItem> criteriaItems;
+    private final List<CriteriaItem> criteriaItems;
 
 
     /**
@@ -235,5 +233,39 @@ public class JoinOn implements PrepareStatementSupplier {
         return new PrepareStatement(prepareSql.toString(), values);
     }
 
+    /**
+     * Gets the value of joinOnType
+     *
+     * @return the value of joinOnType
+     */
+    public JoinOnTypeEnum getJoinOnType() {
+        return joinOnType;
+    }
 
+    /**
+     * Gets the value of table
+     *
+     * @return the value of table
+     */
+    public Table getTable() {
+        return table;
+    }
+
+    /**
+     * Gets the value of columnPairs
+     *
+     * @return the value of columnPairs
+     */
+    public List<Column> getColumnPairs() {
+        return columnPairs;
+    }
+
+    /**
+     * Gets the value of criteriaItems
+     *
+     * @return the value of criteriaItems
+     */
+    public List<CriteriaItem> getCriteriaItems() {
+        return criteriaItems;
+    }
 }

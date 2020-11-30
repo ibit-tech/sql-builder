@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * 表注解
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
 @Retention(RetentionPolicy.RUNTIME)

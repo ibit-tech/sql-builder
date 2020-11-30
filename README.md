@@ -2,7 +2,7 @@
 
 ## 关于sql-builder
 
-[sql-builder](https://github.com/ibit-tech/sql-builder)尝试使用java对象，通过`类SQL`的拼接方式，动态快速的生成SQL。它可作为开源项目[ibit-mybatis](https://github.com/ibit-tech/ibit-mybatis)的核心类库。
+[sql-builder](https://github.com/ibit-tech/sql-builder)尝试使用java对象，通过`类SQL`的拼接方式，动态快速的生成SQL。
 
 ## 核心类说明
 
@@ -10,25 +10,29 @@
 ### 使用`SqlFactory` 构造Sql对象
 
 ```
-@UtilityClass
 public class SqlFactory {
+
+    /**
+     * 构造函数
+     */
+    private SqlFactory() {
+    }
 
     /**
      * 创建搜索
      *
      * @return 搜索sql
      */
-    public SearchSql createSearch() {
-        return new SearchSqlImpl();
+    public static QuerySql createQuery() {
+        return new QuerySqlImpl();
     }
-
 
     /**
      * 创建计数
      *
      * @return 计数sql
      */
-    public CountSql createCount() {
+    public static CountSql createCount() {
         return new CountSqlImpl();
     }
 
@@ -37,7 +41,7 @@ public class SqlFactory {
      *
      * @return 删除sql
      */
-    public DeleteSql createDelete() {
+    public static DeleteSql createDelete() {
         return new DeleteSqlImpl();
     }
 
@@ -46,7 +50,7 @@ public class SqlFactory {
      *
      * @return 插入sql
      */
-    public InsertSql createInsert() {
+    public static InsertSql createInsert() {
         return new InsertSqlImpl();
     }
 
@@ -55,7 +59,7 @@ public class SqlFactory {
      *
      * @return 更新sql
      */
-    public UpdateSql createUpdate() {
+    public static UpdateSql createUpdate() {
         return new UpdateSqlImpl();
     }
 
@@ -66,7 +70,7 @@ public class SqlFactory {
 
 | 接口 | 说明 |
 | --- | --- | 
-| SearchSql | 搜索 |
+| QuerySql | 查询 |
 | CountSql | 计数 |
 | DeleteSql | 删除 |
 | InsertSql | 插入 |
@@ -77,8 +81,6 @@ public class SqlFactory {
 ### `PrepareStatement` 说明
 
 ```
-@Data
-@AllArgsConstructor
 public class PrepareStatement {
 
     /**
@@ -90,27 +92,9 @@ public class PrepareStatement {
      * 插入值列表
      */
     private List<ColumnValue> values;
+    
+    // 省略方法
 
-    /**
-     * 获取空的PrepareStatement
-     *
-     * @return PrepareStatement
-     */
-    public static PrepareStatement empty() {
-        return new PrepareStatement("", Collections.emptyList());
-    }
-
-    /**
-     * 获取参数列表
-     *
-     * @return 参数列表
-     */
-    public List<Object> getParams() {
-        if (CollectionUtils.isEmpty(values)) {
-            return Collections.emptyList();
-        }
-        return values.stream().map(ColumnValue::getValue).collect(Collectors.toList());
-    }
 }
 ```
 
@@ -126,7 +110,7 @@ public class PrepareStatement {
 
 ```
 // 传入列
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -136,7 +120,7 @@ SearchSql sql = SqlFactory.createSearch()
 assertPrepareStatementEquals("SELECT u.user_id, u.name FROM user u", sql.getPrepareStatement());
 
 // 支持聚合函数
-sql = SqlFactory.createSearch()
+sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId.sum("user_id_sum"),
@@ -153,7 +137,7 @@ assertPrepareStatementEquals(
 ### select distinct
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .distinct()
         .column(UserProperties.email)
         .from(UserProperties.TABLE);
@@ -165,7 +149,7 @@ assertPrepareStatementEquals(
 ### select 传入类
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .columnPo(UserPo.class)
         .from(UserProperties.TABLE);
 assertPrepareStatementEquals(
@@ -177,7 +161,7 @@ assertPrepareStatementEquals(
 ### select distinct 传入类
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .distinct()
         .columnPo(UserPo.class)
         .from(UserProperties.TABLE).limit(1000);
@@ -210,7 +194,6 @@ assertPrepareStatementEquals(
         "SELECT COUNT(DISTINCT u.user_id) FROM user u",
         sql.getPrepareStatement());
 
-// 传入多列
 sql = SqlFactory.createCount()
         .distinct()
         .column(
@@ -223,6 +206,7 @@ sql = SqlFactory.createCount()
 assertPrepareStatementEquals(
         "SELECT COUNT(DISTINCT u.name, u.email) FROM user u",
         sql.getPrepareStatement());
+
 ```
 
 ### delete from（异常）
@@ -244,7 +228,7 @@ DeleteSql sql = SqlFactory.createDelete()
         .deleteFrom(UserProperties.TABLE)
         .andWhere(UserProperties.userId.eq(1));
 assertPrepareStatementEquals(
-        "DELETE u.* FROM user u WHERE u.user_id = ?",
+        "DELETE FROM user WHERE user_id = ?",
         Collections.singletonList(
                 UserProperties.userId.value(1)
         ),
@@ -252,15 +236,21 @@ assertPrepareStatementEquals(
         
 // 代码片段2：等价于代码片段1
 sql = SqlFactory.createDelete()
-        .delete(UserProperties.TABLE)
-        .from(UserProperties.TABLE)
-        .andWhere(UserProperties.userId.eq(1));
+        .deleteFrom(UserProperties.TABLE)
+        .andWhere(UserProperties.userId.eq(1))
+        .leftJoinOn(
+                OrganizationProperties.TABLE,
+                Arrays.asList(
+                        UserProperties.orgId,
+                        OrganizationProperties.orgId
+                )
+        );
 assertPrepareStatementEquals(
-        "DELETE u.* FROM user u WHERE u.user_id = ?",
+        "DELETE u.* FROM user u LEFT JOIN organization o ON u.org_id = o.org_id WHERE u.user_id = ?",
         Collections.singletonList(
                 UserProperties.userId.value(1)
         ),
-        sql.getPrepareStatement());             
+        sql.getPrepareStatement());           
 ```
 
 ### delete from（多表删除）
@@ -337,23 +327,23 @@ assertPrepareStatementEquals(
 ### set
 
 ```
-UpdateSql sql = SqlFactory.createUpdate()
-        .update(UserProperties.TABLE)
-        .set(
+InsertSql sql = SqlFactory
+        .createInsert()
+        .insert(UserProperties.TABLE)
+        .values(
                 Arrays.asList(
-                        UserProperties.name.set("IBIT"),
-                        UserProperties.loginId.set("188"),
-                        UserProperties.avatarId.set(null)
+                        UserProperties.name.value("IBIT"),
+                        UserProperties.loginId.value("188"),
+                        UserProperties.avatarId.value(null)
                 )
-        ).andWhere(UserProperties.userId.eq(1));
+        );
 
 assertPrepareStatementEquals(
-        "UPDATE user u SET u.name = ?, u.login_id = ?, u.avatar_id = ? WHERE u.user_id = ?",
+        "INSERT INTO user(name, login_id, avatar_id) VALUES(?, ?, ?)",
         Arrays.asList(
                 UserProperties.name.value("IBIT"),
                 UserProperties.loginId.value("188"),
-                UserProperties.avatarId.value(null),
-                UserProperties.userId.value(1)
+                UserProperties.avatarId.value(null)
         ),
         sql.getPrepareStatement());
 ```
@@ -414,11 +404,37 @@ assertPrepareStatementEquals(
         sql.getPrepareStatement());
 ```
 
+### insert on duplicate key 支持
+
+```
+// on duplicate key update 支持
+InsertSql sql = SqlFactory
+        .createInsert()
+        .insert(UserProperties.TABLE)
+        .values(
+                Arrays.asList(
+                        UserProperties.name.value("IBIT"),
+                        UserProperties.loginId.value("188"),
+                        UserProperties.avatarId.value(null)
+                )
+        ).onDuplicateKeyUpdate(UserProperties.name.set("IBIT"));
+
+assertPrepareStatementEquals(
+        "INSERT INTO user(name, login_id, avatar_id) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE name = ?",
+        Arrays.asList(
+                UserProperties.name.value("IBIT"),
+                UserProperties.loginId.value("188"),
+                UserProperties.avatarId.value(null),
+                UserProperties.name.value("IBIT")
+        ),
+        sql.getPrepareStatement());
+```
+
 ### from
 
 ```
 // 单个from
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         ProjectProperties.projectId,
@@ -431,11 +447,11 @@ assertPrepareStatementEquals(
         sql.getPrepareStatement());
 
 // 多个from    
-sql = SqlFactory.createSearch()
+sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
-                        UserProperties.userId, 
-                        UserProperties.name, 
+                        UserProperties.userId,
+                        UserProperties.name,
                         ProjectProperties.name
                 )
         )
@@ -451,7 +467,7 @@ assertPrepareStatementEquals(
 
 ```
 // 代码片段1：join on
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId, 
@@ -472,7 +488,7 @@ assertPrepareStatementEquals(
         sql.getPrepareStatement());
 
 // 代码片段：left join on
-sql = SqlFactory.createSearch()
+sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId, 
@@ -499,7 +515,7 @@ assertPrepareStatementEquals(
 
 ```
 // 代码片段1：on 列相等
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -519,7 +535,7 @@ assertPrepareStatementEquals(
         sql.getPrepareStatement());
 
 // 代码片段2：on 条件语句
-sql = SqlFactory.createSearch()
+sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -557,7 +573,7 @@ CriteriaItem userIdItem = UserProperties.userId.gt(100);
 CriteriaItem type1Item = UserProperties.type.eq(1);
 CriteriaItem type2Item = UserProperties.type.eq(2);
 
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -582,7 +598,7 @@ assertPrepareStatementEquals(
         sql.getPrepareStatement());
 
 
-sql = SqlFactory.createSearch()
+sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -606,7 +622,7 @@ assertPrepareStatementEquals(
         ),
         sql.getPrepareStatement());
 
-sql = SqlFactory.createSearch()
+sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -640,7 +656,7 @@ assertPrepareStatementEquals(
 ### where and
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -660,7 +676,7 @@ assertPrepareStatementEquals(
         ),
         sql.getPrepareStatement());
 
-sql = SqlFactory.createSearch()
+sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -676,12 +692,22 @@ sql = SqlFactory.createSearch()
                 )
         )
         .limit(1);
+
+assertPrepareStatementEquals(
+        "SELECT u.user_id, u.name FROM user u WHERE (u.name LIKE ? OR u.email LIKE ?) LIMIT ?, ?",
+        Arrays.asList(
+                UserProperties.name.value("小%"),
+                UserProperties.email.value("xiao%"),
+                getStartColumn().value(0),
+                getLimitColumn().value(1)
+        ),
+        sql.getPrepareStatement());
 ```
 
 ### where or
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -700,7 +726,7 @@ assertPrepareStatementEquals(
         ),
         sql.getPrepareStatement());
 
-sql = SqlFactory.createSearch()
+sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -730,7 +756,7 @@ assertPrepareStatementEquals(
 ### where 支持flag条件
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -753,7 +779,7 @@ assertPrepareStatementEquals(
 ### order by
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -785,7 +811,7 @@ assertPrepareStatementEquals(
 ### 自定义order by（mysql语法）
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -823,7 +849,7 @@ assertPrepareStatementEquals(
 AggregateColumn minAge = UserProperties.age.min("min_age");
 AggregateColumn maxAge = UserProperties.age.max("max_age");
 
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         minAge,
@@ -858,7 +884,7 @@ assertPrepareStatementEquals(
 AggregateColumn minAge = UserProperties.age.min("min_age");
 AggregateColumn maxAge = UserProperties.age.max("max_age");
 
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         minAge,
@@ -881,7 +907,7 @@ assertPrepareStatementEquals(
 ### having and
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         minAge,
@@ -921,7 +947,7 @@ assertPrepareStatementEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_ag
 ### having or
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.age.min("min_age"),
@@ -962,7 +988,7 @@ assertPrepareStatementEquals("SELECT MIN(u.age) AS min_age, MAX(u.age) AS max_ag
 ### limit
 
 ```
-SearchSql sql = SqlFactory.createSearch()
+QuerySql sql = SqlFactory.createQuery()
         .column(
                 Arrays.asList(
                         UserProperties.userId,
@@ -994,22 +1020,91 @@ assertPrepareStatementEquals("SELECT u.user_id, u.name, p.name FROM user u LEFT 
         sql.getPrepareStatement());
 ```
 
+### 全文搜索
+
+```
+// 查询列中有全文索引
+FullTextColumn nameMatchScore = UserProperties.name.fullText("IBIT", "score");
+QuerySql sql = SqlFactory.createQuery()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        nameMatchScore
+                )
+        )
+        .from(UserProperties.TABLE)
+        .andWhere(UserProperties.type.eq(1))
+        .orderBy(nameMatchScore.orderBy());
+assertPrepareStatementEquals(
+        "SELECT u.user_id, MATCH(u.name) AGAINST(?) AS score FROM user u WHERE u.type = ? ORDER BY score",
+        Arrays.asList(
+                nameMatchScore.value(),
+                UserProperties.type.value(1)
+        ),
+        sql.getPrepareStatement());
+
+// boolean 模式
+nameMatchScore = UserProperties.name.fullText("IBIT", FullTextModeEnum.BOOLEAN, "score");
+sql = SqlFactory.createQuery()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        nameMatchScore
+                )
+        )
+        .from(UserProperties.TABLE)
+        .andWhere(UserProperties.type.eq(1))
+        .orderBy(nameMatchScore.orderBy());
+assertPrepareStatementEquals(
+        "SELECT u.user_id, MATCH(u.name) AGAINST(? IN BOOLEAN MODE) AS score FROM user u WHERE u.type = ? ORDER BY score",
+        Arrays.asList(
+                nameMatchScore.value(),
+                UserProperties.type.value(1)
+        ),
+        sql.getPrepareStatement());
+
+// natural language模式
+nameMatchScore = UserProperties.name.fullText("IBIT", FullTextModeEnum.NATURAL_LANGUAGE, "score");
+sql = SqlFactory.createQuery()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId,
+                        nameMatchScore
+                )
+        )
+        .from(UserProperties.TABLE)
+        .andWhere(UserProperties.type.eq(1))
+        .orderBy(nameMatchScore.orderBy());
+assertPrepareStatementEquals(
+        "SELECT u.user_id, MATCH(u.name) AGAINST(? IN NATURAL LANGUAGE MODE) AS score FROM user u WHERE u.type = ? ORDER BY score",
+        Arrays.asList(
+                nameMatchScore.value(),
+                UserProperties.type.value(1)
+        ),
+        sql.getPrepareStatement());
+```
+
 ## 其他说明
 
 `tech.ibit.sqlbuilder.Column`
 
 ```
-@Getter
-@Setter
-@AllArgsConstructor
 public class Column implements IColumn,
-        IColumnCriteriaItemBuilder, IColumnAggregateBuilder, IColumnSetItemBuilder, IColumnOrderByBuilder { 
+        IColumnCriteriaItemSupport,
+        IColumnAggregateSupport,
+        IColumnFullTextSupport,
+        IColumnSetItemSupport,
+        IColumnOrderBySupport,
+        IColumnUniqueKeySupport {
 
      // 省略实现代码
-     ...
-     
+     ...    
 }
 ```
+
+## 文档位置
+
+[sql-builder 2.0-SNAPSHOT API](https://ibit.tech/apidocs/sql-builder/2.x/index.html)
 
 实现了多个接口支持快速通过类创建`where语句`、`聚合函数`、`set语句`和`order by语句`。
 
@@ -1023,6 +1118,8 @@ public class Column implements IColumn,
   <version>2.x</version>
 </dependency>
 ```
+
+**注意**: 2.x 替换成对应的版本
 
 
 版权声明: [Apache 2](http://www.apache.org/licenses/LICENSE-2.0.txt)

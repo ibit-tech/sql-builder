@@ -3,7 +3,7 @@ package tech.ibit.sqlbuilder.exception;
 /**
  * SQL语法不支持异常
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
 public class SqlException extends RuntimeException {
@@ -60,13 +60,21 @@ public class SqlException extends RuntimeException {
     }
 
     /**
-     * i
      * id不存在
      *
      * @return 错误消息
      */
     public static SqlException idValueNotFound() {
         return new SqlException("Id value not found");
+    }
+
+    /**
+     * Unique Key 信息不存在
+     *
+     * @return 错误消息
+     */
+    public static SqlException uniqueKeyValueNotFound() {
+        return new SqlException("Unique key value not found");
     }
 
 
@@ -112,5 +120,24 @@ public class SqlException extends RuntimeException {
      */
     public static SqlException tableNotMatched(String exceptTable, String actualTable) {
         return new SqlException("Table not match, except[" + exceptTable + "], actual[" + actualTable + "]");
+    }
+
+
+    /**
+     * 列不存在
+     *
+     * @return 错误消息
+     */
+    public static SqlException columnNotFound() {
+        return new SqlException("Column not found");
+    }
+
+    /**
+     * 表不存在
+     *
+     * @return 错误消息
+     */
+    public static SqlException tableNotFound() {
+        return new SqlException("Table not found");
     }
 }

@@ -1,14 +1,11 @@
 package tech.ibit.sqlbuilder.enums;
 
-import lombok.Getter;
-
 /**
  * 操作符号
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
-@Getter
 public enum OperatorEnum {
 
     /**
@@ -92,8 +89,15 @@ public enum OperatorEnum {
     NOT_LIKE("NOT LIKE"),
     ;
 
-    private String value;
-    private String secondValue;
+    /**
+     * 第一个值
+     */
+    private final String value;
+
+    /**
+     * 第二个值
+     */
+    private final String secondValue;
 
     OperatorEnum(String value) {
         this(value, null);
@@ -102,5 +106,23 @@ public enum OperatorEnum {
     OperatorEnum(String value, String secondValue) {
         this.value = value;
         this.secondValue = secondValue;
+    }
+
+    /**
+     * Gets the value of value
+     *
+     * @return the value of value
+     */
+    public String getValue() {
+        return value;
+    }
+
+    /**
+     * Gets the value of secondValue
+     *
+     * @return the value of secondValue
+     */
+    public String getSecondValue() {
+        return secondValue;
     }
 }

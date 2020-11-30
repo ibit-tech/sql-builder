@@ -3,7 +3,7 @@ package tech.ibit.sqlbuilder;
 /**
  * 定义OrderBy接口
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
 public interface IOrderBy extends PrepareStatementSupplier {

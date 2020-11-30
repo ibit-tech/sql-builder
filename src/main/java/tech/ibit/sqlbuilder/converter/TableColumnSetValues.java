@@ -1,7 +1,5 @@
 package tech.ibit.sqlbuilder.converter;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import tech.ibit.sqlbuilder.Table;
 
 import java.util.List;
@@ -9,11 +7,9 @@ import java.util.List;
 /**
  * 列-值信息（带列额外信息）
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
-@Data
-@AllArgsConstructor
 public class TableColumnSetValues {
 
     /**
@@ -25,4 +21,53 @@ public class TableColumnSetValues {
      * 列-值对列表（带列额外信息）
      */
     private List<ColumnSetValue> columnValues;
+
+    /**
+     * 构造函数
+     *
+     * @param table        表
+     * @param columnValues 列值
+     */
+    public TableColumnSetValues(Table table, List<ColumnSetValue> columnValues) {
+        this.table = table;
+        this.columnValues = columnValues;
+    }
+
+    /**
+     * Gets the value of table
+     *
+     * @return the value of table
+     */
+    public Table getTable() {
+        return table;
+    }
+
+    /**
+     * Sets the table
+     * <p>You can use getTable() to get the value of table</p>
+     *
+     * @param table table
+     */
+    public void setTable(Table table) {
+        this.table = table;
+    }
+
+    /**
+     * Gets the value of columnValues
+     *
+     * @return the value of columnValues
+     */
+    public List<ColumnSetValue> getColumnValues() {
+        return columnValues;
+    }
+
+    /**
+     * Sets the columnValues
+     * <p>You can use getColumnValues() to get the value of columnValues</p>
+     *
+     * @param columnValues columnValues
+     */
+    public void setColumnValues(List<ColumnSetValue> columnValues) {
+        this.columnValues = columnValues;
+    }
 }

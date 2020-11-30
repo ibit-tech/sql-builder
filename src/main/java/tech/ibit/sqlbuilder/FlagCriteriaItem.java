@@ -1,19 +1,24 @@
 package tech.ibit.sqlbuilder;
 
-
-import lombok.Data;
-import tech.ibit.sqlbuilder.enums.CriteriaItemValueTypeEnum;
-
 import java.util.Collections;
 
 /**
  * 标记位查询条件
  *
- * @author IBIT程序猿
+ * @author iBit程序猿
  * @version 1.0
  */
-@Data
 public class FlagCriteriaItem extends CriteriaItem {
+
+    /**
+     * 第一列
+     */
+    private final IColumn column;
+
+    /**
+     * 值
+     */
+    private final long value;
 
     /**
      * 包含类型
@@ -52,7 +57,8 @@ public class FlagCriteriaItem extends CriteriaItem {
      * @param value        位long值
      */
     private FlagCriteriaItem(IColumn column, ContainsType containsType, long value) {
-        super(column, null, null, value, null, CriteriaItemValueTypeEnum.SINGLE_VALUE);
+        this.column = column;
+        this.value = value;
         this.containsType = containsType;
     }
 
@@ -68,17 +74,11 @@ public class FlagCriteriaItem extends CriteriaItem {
         return new FlagCriteriaItem(column, containsType, value);
     }
 
-    /**
-     * 获取预查询SQL对象
-     *
-     * @param useAlias 是否使用别名
-     * @return 预查询SQL对象
-     */
     @Override
     public PrepareStatement getPrepareStatement(boolean useAlias) {
 
         StringBuilder whereSql = new StringBuilder();
-        String columnName = getColumn().getCompareColumnName(useAlias);
+        String columnName = column.getCompareColumnName(useAlias);
         switch (containsType) {
             case CONTAINS_ALL:
                 whereSql.append(columnName)
@@ -95,6 +95,43 @@ public class FlagCriteriaItem extends CriteriaItem {
                 break;
             default:
         }
-        return new PrepareStatement(whereSql.toString(), Collections.singletonList(new ColumnValue(getColumn(), getValue())));
+        return new PrepareStatement(whereSql.toString(), Collections.singletonList(new ColumnValue(column, value)));
+    }
+
+    /**
+     * Gets the value of containsType
+     *
+     * @return the value of containsType
+     */
+    public ContainsType getContainsType() {
+        return containsType;
+    }
+
+    /**
+     * Sets the containsType
+     * <p>You can use getContainsType() to get the value of containsType</p>
+     *
+     * @param containsType containsType
+     */
+    public void setContainsType(ContainsType containsType) {
+        this.containsType = containsType;
+    }
+
+    /**
+     * Gets the value of column
+     *
+     * @return the value of column
+     */
+    public IColumn getColumn() {
+        return column;
+    }
+
+    /**
+     * Gets the value of value
+     *
+     * @return the value of value
+     */
+    public long getValue() {
+        return value;
     }
 }

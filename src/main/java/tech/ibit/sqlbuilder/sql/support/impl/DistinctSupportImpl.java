@@ -50,7 +50,7 @@ public class DistinctSupportImpl<T> implements SqlSupport<T>,
      * @return 复制后的对象
      */
     public <K> DistinctSupportImpl<K> copy(K sql) {
-        return new DistinctSupportImpl<>(sql, distinct);
+        return new DistinctSupportImpl<>(sql, distinct.copy());
     }
 
     @Override

@@ -59,7 +59,7 @@ public class HavingSupportImpl<T> extends CriteriaSupportImpl
      * @return 复制后的对象
      */
     public <K> HavingSupportImpl<K> copy(K sql) {
-        return new HavingSupportImpl<>(sql, having);
+        return new HavingSupportImpl<>(sql, having.copy());
     }
 
     /**

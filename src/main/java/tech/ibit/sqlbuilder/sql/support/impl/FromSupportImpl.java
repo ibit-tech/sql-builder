@@ -42,7 +42,7 @@ public class FromSupportImpl<T> extends BaseTableSupportImpl<T> implements FromS
      * @return 复制后的对象
      */
     public <K> FromSupportImpl<K> copy(K sql) {
-        return new FromSupportImpl<>(sql, getTable());
+        return new FromSupportImpl<>(sql, getTable().copy());
     }
 
     @Override

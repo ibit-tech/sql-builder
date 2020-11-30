@@ -55,7 +55,7 @@ public class JoinOnSupportImpl<T> implements SqlSupport<T>,
      * @return 复制后的对象
      */
     public <K> JoinOnSupportImpl<K> copy(K sql) {
-        return new JoinOnSupportImpl<>(sql, joinOn);
+        return new JoinOnSupportImpl<>(sql, joinOn.copy());
     }
 
 

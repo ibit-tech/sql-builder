@@ -209,6 +209,35 @@ assertPrepareStatementEquals(
 
 ```
 
+### count 聚合列 
+
+```
+// 如果存在 group by，则 group by 列作为 distinct 列
+Sql countSql = SqlFactory.createQuery()
+        .column(
+                Arrays.asList(
+                        UserProperties.userId.sum("user_id_sum"),
+                        UserProperties.userId.avg("user_id_avg"))
+        ).from(UserProperties.TABLE)
+        .groupBy(UserProperties.userId).toCountSql();
+
+assertPrepareStatementEquals(
+        "SELECT COUNT(DISTINCT u.user_id) FROM user u",
+        countSql.getPrepareStatement());
+
+
+// 如果只存在聚合列，但是不存在 group by 则永远返回1
+countSql = SqlFactory.createQuery()
+        .column(
+                Collections.singletonList(
+                        UserProperties.userId.count("user_id_total")
+                )
+        ).from(UserProperties.TABLE).toCountSql();
+assertPrepareStatementEquals(
+        "SELECT COUNT(DISTINCT 1) FROM user u",
+        countSql.getPrepareStatement());
+```
+
 ### delete from（异常）
 
 ```

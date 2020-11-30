@@ -58,7 +58,7 @@ public class WhereSupportImpl<T> extends CriteriaSupportImpl
      * @return 复制后的对象
      */
     public <K> WhereSupportImpl<K> copy(K sql) {
-        return new WhereSupportImpl<>(sql, where);
+        return new WhereSupportImpl<>(sql, where.copy());
     }
 
     /**

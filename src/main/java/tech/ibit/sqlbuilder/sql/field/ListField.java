@@ -59,4 +59,15 @@ public class ListField<T> {
     public void setItems(List<T> items) {
         this.items = items;
     }
+
+    /**
+     * 复制一个新的对象
+     *
+     * @return 新的对象
+     */
+    public ListField<T> copy() {
+        ListField<T> t = new ListField<>();
+        t.setItems(new ArrayList<>(items));
+        return t;
+    }
 }

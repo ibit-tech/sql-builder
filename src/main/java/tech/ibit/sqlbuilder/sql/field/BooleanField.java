@@ -20,6 +20,15 @@ public class BooleanField {
     }
 
     /**
+     * 复制
+     *
+     * @return 新的BooleanField
+     */
+    public BooleanField copy() {
+        return new BooleanField(value);
+    }
+
+    /**
      * 构造函数
      *
      * @param value boolean 值

@@ -1133,7 +1133,7 @@ public class Column implements IColumn,
 
 ## 文档位置
 
-[sql-builder 2.0-SNAPSHOT API](https://ibit.tech/apidocs/sql-builder/2.x/index.html)
+[sql-builder 2.0 API](https://ibit.tech/apidocs/sql-builder/2.0/index.html)
 
 实现了多个接口支持快速通过类创建`where语句`、`聚合函数`、`set语句`和`order by语句`。
 
@@ -1148,7 +1148,7 @@ public class Column implements IColumn,
 </dependency>
 ```
 
-**注意**: 2.x 替换成对应的版本
+**注意**: 2.x 替换成对应的版本，目前是2.0
 
 
 版权声明: [Apache 2](http://www.apache.org/licenses/LICENSE-2.0.txt)

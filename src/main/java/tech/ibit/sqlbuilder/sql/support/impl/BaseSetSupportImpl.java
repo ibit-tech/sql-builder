@@ -56,6 +56,7 @@ public class BaseSetSupportImpl<T> implements SqlSupport<T>, PrepareStatementBui
     /**
      * 获取预查询SQL对象
      *
+     * @param hook     开始位置
      * @param useAlias 是否使用别名
      * @return 预查询SQL对象
      */

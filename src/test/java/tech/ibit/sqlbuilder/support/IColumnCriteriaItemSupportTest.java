@@ -1,11 +1,11 @@
 package tech.ibit.sqlbuilder.support;
 
 import org.junit.Test;
-import tech.ibit.sqlbuilder.demo.entity.property.OrganizationProperties;
-import tech.ibit.sqlbuilder.demo.entity.property.UserProperties;
 import tech.ibit.sqlbuilder.DefaultCriteriaItem;
 import tech.ibit.sqlbuilder.FlagCriteriaItem;
 import tech.ibit.sqlbuilder.PrepareStatement;
+import tech.ibit.sqlbuilder.demo.entity.property.OrganizationProperties;
+import tech.ibit.sqlbuilder.demo.entity.property.UserProperties;
 import tech.ibit.sqlbuilder.enums.OperatorEnum;
 
 import java.util.Arrays;

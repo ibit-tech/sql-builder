@@ -17,7 +17,7 @@ public interface IColumnFullTextSupport extends IColumnSupport {
     /**
      * 获取全文索引列
      *
-     * @param value  索引值
+     * @param value 索引值
      * @return 全文索引列
      */
     default FullTextColumn fullText(String value) {
@@ -32,14 +32,14 @@ public interface IColumnFullTextSupport extends IColumnSupport {
      * @return 全文索引列
      */
     default FullTextColumn fullText(IColumn[] otherColumns, String value) {
-        return fullText(otherColumns, value,(String) null);
+        return fullText(otherColumns, value, (String) null);
     }
 
     /**
      * 获取全文索引列
      *
-     * @param value  索引值
-     * @param mode   全文查询模式
+     * @param value 索引值
+     * @param mode  全文查询模式
      * @return 全文索引列
      */
     default FullTextColumn fullText(String value, FullTextModeEnum mode) {

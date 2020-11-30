@@ -197,7 +197,6 @@ public class DeleteSqlImpl implements DeleteSql,
     }
 
 
-
     @Override
     public DeleteSql deleteFrom(Table table) {
         delete(table);
